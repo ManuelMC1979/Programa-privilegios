@@ -1,0 +1,1137 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+	<meta charset="UTF-8" />
+	<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+	<title>Programa de Privilegios - Autorellenable</title>
+	<style>
+		:root {
+			/* Colores ajustados a la plantilla original */
+			--bg: #e9f0f8;
+			--primary: #1c5fa1; /* banda superior oscura */
+			--primary-2: #2c7fc8; /* banda de mes */
+			--accent: #58a3e1; /* azul medio para secciones */
+			--title-light: #eaf3fb; /* texto claro en bandas */
+			--text: #0b2a45;
+			--muted: #4f6b85;
+			--white: #fff;
+			--border: #bcd0e3;
+		}
+		html, body { margin: 0; padding: 0; background: var(--bg); color: var(--text); font-family: Calibri, "Segoe UI", Tahoma, sans-serif; }
+		.container { max-width: 1020px; margin: 18px auto; padding: 0 10px; }
+
+		/* Header */
+		.header { background: #ffffff; color: #000000; padding: 14px 18px; border-radius: 8px 8px 0 0; box-shadow: 0 4px 12px rgba(0,0,0,0.06); border: 1px solid var(--border); border-bottom: none; }
+		.header h1 { margin: 0; font-size: 19px; letter-spacing: 0.2px; font-weight: 700; color: #000000; }
+		.header small { display: block; margin-top: 4px; color: #000000; font-size: 12px; }
+
+		/* Layout */
+		.grid { display: grid; grid-template-columns: 1fr; gap: 12px; margin-top: 0; }
+		.card { background: var(--white); border: 1px solid var(--border); border-radius: 0 0 8px 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.06); }
+		.card h2 { margin: 0; font-size: 16px; color: var(--primary); padding: 12px 14px; border-bottom: 1px solid var(--border); }
+		.card .body { padding: 12px 14px; }
+
+		/* Form */
+		form.grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+		.field { display: flex; flex-direction: column; gap: 6px; }
+		.field label { font-size: 12px; color: var(--muted); }
+		.field input, .field select, .field textarea { border: 1px solid var(--border); border-radius: 8px; padding: 8px 10px; font-size: 14px; }
+		.subgrid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+		.subgrid-4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
+		.actions { display: flex; gap: 10px; margin-top: 10px; }
+		button { border: 0; border-radius: 8px; padding: 10px 12px; font-size: 14px; cursor: pointer; }
+		.primary { background: var(--primary); color: var(--white); }
+		.ghost { background: var(--white); color: var(--primary); border: 1px solid var(--border); }
+
+		/* Ítems con botón eliminar */
+		.list-item { display: flex; align-items: center; gap: 8px; }
+		.list-item .item-text { flex: 1; }
+		.item-remove { background: transparent; border: 1px solid var(--border); color: #a33; border-radius: 6px; padding: 0 6px; line-height: 1.6; cursor: pointer; }
+		.item-remove:hover { background: #ffe8e5; border-color: #e1a29c; }
+
+		/* Resultado (Plantilla) */
+		.program { background: var(--white); border: 1px solid var(--border); border-radius: 8px; overflow: hidden; }
+		.program .title { background: var(--primary); color: var(--white); padding: 10px 14px; font-weight: 700; display: flex; align-items: center; justify-content: space-between; }
+		.program .title small { color: var(--title-light); font-weight: 400; }
+		.program .month { background: var(--primary-2); color: var(--white); padding: 8px 14px; font-weight: 700; }
+		.program .section { padding: 10px 14px; border-top: 1px solid var(--border); }
+		.program table { width: 100%; border-collapse: collapse; table-layout: fixed; }
+		.program th { background: #dbe9f6; color: #113a5d; font-weight: 700; font-size: 13px; border: 1px solid var(--border); padding: 6px 8px; }
+		.program td { border: 1px solid var(--border); padding: 6px 8px; font-size: 13px; }
+		/* Anchos aproximados según el documento */
+		.col-fecha { width: 10%; }
+		.col-acom { width: 24%; }
+		.col-rol { width: 16%; }
+		.program .section h3 { margin: 0 0 8px; color: var(--primary); font-size: 15px; }
+
+		/* Subtítulo dentro de secciones */
+		.subsection-title { color: var(--primary); font-weight: 700; font-size: 14px; margin: 0 0 6px 0; }
+
+		/* Ajustes específicos Abrir Salón */
+		.abrir-table th.fecha { width: 12%; }
+		.abrir-table th.enc { width: 88%; }
+		.abrir-table tbody td.enc { font-size: 15px; text-align: center; }
+
+		/* Cerrar Salón: centrar nombres */
+		#cerrarMieOut, #cerrarSabOut { text-align: center; font-size: 15px; }
+
+		/* Recuadro fijo de áreas */
+		.info-box { margin-top: 10px; background: #cfe0f3; color: #0b2a45; padding: 14px; text-align: center; border-radius: 8px; font-weight: 700; }
+
+		/* Impresión */
+		@page { size: A4; margin: 14mm; }
+		@media print {
+			.no-print { display: none !important; }
+			body { background: #fff; }
+			.container { max-width: 100%; margin: 0; padding: 0; }
+			.program { box-shadow: none; border: none; }
+			.program .title, .program .month { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+			.program th { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+			.item-remove { display: none !important; }
+			/* Intensificar colores al exportar a PDF */
+			.program .title { background: #154b82 !important; color: #ffffff !important; }
+			.program .month { background: #1f6fb4 !important; color: #ffffff !important; }
+			.program th { background: #c2dbf5 !important; color: #0a2741 !important; border-color: #8fb3d6 !important; }
+			.program td { border-color: #8fb3d6 !important; }
+		}
+	</style>
+</head>
+<body>
+	<div class="container">
+		<div class="header">
+			<h1>PROGRAMA DE PRIVILEGIOS DE SERVICIO</h1>
+			<small>“Puse a cargo...porque era un hombre muy confiable y temía al Dios verdadero” (Neh. 7:2)</small>
+		</div>
+
+		<div class="grid">
+			<div class="card no-print">
+				<h2>Formulario de datos</h2>
+				<div class="body">
+					<form id="form" class="grid-2">
+						<div class="field">
+							<label>Mes y Año</label>
+							<select id="mesSelect"></select>
+						</div>
+						<div class="field">
+							<label>Frase superior</label>
+							<input type="text" id="frase" placeholder="Cita bíblica u observación" />
+						</div>
+
+						<div class="field">
+							<label>Superintendente de circuito - Título sección</label>
+							<input type="text" id="titulo_sc" value="Asamblea con el superintendente de circuito" />
+						</div>
+						<div class="field">
+							<label>Observación SC</label>
+							<input type="text" id="obs_sc" placeholder="Notas sobre asamblea" />
+						</div>
+						<div class="field" style="grid-column: 1 / -1;">
+							<label>Mostrar sección del superintendente de circuito</label>
+							<div style="display:flex;align-items:center;gap:8px;">
+								<input type="checkbox" id="toggle_sc" checked />
+								<span style="font-size:12px;color:var(--muted)">Si está desmarcado, no se mostrará la sección en el programa.</span>
+							</div>
+						</div>
+
+						<div class="field">
+							<label>Programa general - Fechas</label>
+							<div class="actions" style="padding:0; gap:6px; flex-wrap: wrap;">
+								<button type="button" class="ghost" id="prevMes">◀ Mes anterior</button>
+								<select id="fechasSelect"></select>
+								<select id="filtroDiaFechas" title="Filtrar por día">
+									<option value="todos">Todos los días</option>
+									<option value="jueves">Solo Jueves</option>
+									<option value="domingo">Solo Domingo</option>
+								</select>
+								<button type="button" class="ghost" id="nextMes">Mes siguiente ▶</button>
+								<button type="button" class="ghost" id="addFecha">Añadir</button>
+								<button type="button" class="ghost" id="clearFechas">Limpiar</button>
+							</div>
+							<small style="color: var(--muted)">Use el desplegable para agregar fechas al programa.</small>
+							<ul id="fechasList" style="margin:8px 0 0; padding-left:18px; color: var(--muted);"></ul>
+						</div>
+						<div class="field">
+							<label>Programa general - Acomodación</label>
+							<div class="actions" style="padding:0; gap:6px; flex-wrap: wrap;">
+								<select id="acomodacionSelect"></select>
+								<button type="button" class="ghost" id="addAcomodacion">Añadir</button>
+								<button type="button" class="ghost" id="clearAcomodacion">Limpiar</button>
+							</div>
+							<small style="color: var(--muted)">Seleccione nombres y añádalos; cada fila usa el orden agregado.</small>
+							<ul id="acomodacionList" style="margin:8px 0 0; padding-left:18px; color: var(--muted);"></ul>
+						</div>
+
+						<div class="field">
+							<label>Programa general - Micrófonos</label>
+							<div class="actions" style="padding:0; gap:6px; flex-wrap: wrap;">
+								<select id="microfonosSelect"></select>
+								<button type="button" class="ghost" id="addMicrofonos">Añadir</button>
+								<button type="button" class="ghost" id="clearMicrofonos">Limpiar</button>
+							</div>
+							<small style="color: var(--muted)">Use “Añadir” para crear filas; se permiten parejas con “;”.</small>
+							<ul id="microfonosList" style="margin:8px 0 0; padding-left:18px; color: var(--muted);"></ul>
+						</div>
+
+						<div class="field">
+							<label>Programa general - Acomodación ZOOM y Vídeo</label>
+							<div class="actions" style="padding:0; gap:6px; flex-wrap: wrap;">
+								<select id="zoomVideoSelect"></select>
+								<button type="button" class="ghost" id="addZoomVideo">Añadir</button>
+								<button type="button" class="ghost" id="clearZoomVideo">Limpiar</button>
+							</div>
+							<small style="color: var(--muted)">Rol único por fila.</small>
+							<ul id="zoomVideoList" style="margin:8px 0 0; padding-left:18px; color: var(--muted);"></ul>
+						</div>
+
+						<div class="field">
+							<label>Programa general - Sonido</label>
+							<div class="actions" style="padding:0; gap:6px; flex-wrap: wrap;">
+								<select id="sonidoSelect"></select>
+								<button type="button" class="ghost" id="addSonido">Añadir</button>
+								<button type="button" class="ghost" id="clearSonido">Limpiar</button>
+							</div>
+							<small style="color: var(--muted)">Lista específica por rol. Rol único por fila.</small>
+							<ul id="sonidoList" style="margin:8px 0 0; padding-left:18px; color: var(--muted);"></ul>
+						</div>
+						<div class="field">
+							<label>Programa general - Plataforma</label>
+							<div class="actions" style="padding:0; gap:6px; flex-wrap: wrap;">
+								<select id="plataformaSelect"></select>
+								<button type="button" class="ghost" id="addPlataforma">Añadir</button>
+								<button type="button" class="ghost" id="clearPlataforma">Limpiar</button>
+							</div>
+							<small style="color: var(--muted)">Lista específica por rol. Rol único por fila.</small>
+							<ul id="plataformaList" style="margin:8px 0 0; padding-left:18px; color: var(--muted);"></ul>
+						</div>
+
+						<div class="field" style="grid-column: 1 / -1;">
+							<label>Abrir Salón - Fechas y encargados</label>
+							<div class="actions" style="padding:0; gap:6px; flex-wrap: wrap;">
+								<select id="abrirFechaSelect"></select>
+								<select id="filtroDiaAbrir" title="Filtrar por día">
+									<option value="todos">Todos los días</option>
+									<option value="jueves">Solo Jueves</option>
+									<option value="domingo">Solo Domingo</option>
+								</select>
+								<input id="abrirFechaCustom" type="text" placeholder="Fecha personalizada (opcional)" style="flex:1;" />
+								<select id="abrirEncSelect"></select>
+								<button type="button" class="ghost" id="addAbrir">Añadir</button>
+								<button type="button" class="ghost" id="clearAbrir">Limpiar</button>
+							</div>
+							<small style="color: var(--muted)">El selector usa el Mes/Año actual. Si escribe "Fecha personalizada", se usará esa en lugar del selector.</small>
+							<ul id="abrirList" style="margin:8px 0 0; padding-left:18px; color: var(--muted);"></ul>
+						</div>
+						<div class="field">
+							<label>Cerrar Salón - Jueves</label>
+							<div class="actions" style="padding:0; gap:6px; flex-wrap: wrap;">
+								<select id="cerrarMieSelect"></select>
+								<button type="button" class="ghost" id="addCerrarMie">Añadir</button>
+								<button type="button" class="ghost" id="clearCerrarMie">Limpiar</button>
+							</div>
+							<small style="color: var(--muted)">Seleccione la dupla y añádala. Cada ítem es “Nombre - Nombre”.</small>
+							<ul id="cerrarMieList" style="margin:8px 0 0; padding-left:18px; color: var(--muted);"></ul>
+						</div>
+						<div class="field">
+							<label>Cerrar Salón - Domingo</label>
+							<div class="actions" style="padding:0; gap:6px; flex-wrap: wrap;">
+								<select id="cerrarSabSelect"></select>
+								<button type="button" class="ghost" id="addCerrarSab">Añadir</button>
+								<button type="button" class="ghost" id="clearCerrarSab">Limpiar</button>
+							</div>
+							<small style="color: var(--muted)">Seleccione la dupla y añádala. Cada ítem es “Nombre - Nombre”.</small>
+							<ul id="cerrarSabList" style="margin:8px 0 0; padding-left:18px; color: var(--muted);"></ul>
+						</div>
+
+						<div class="field">
+							<label>Aseo - Frase sección</label>
+							<input type="text" id="titulo_aseo" value="Programa de Aseo del Salón" />
+						</div>
+						<div class="field">
+							<label>Aseo - Cita/nota</label>
+							<input type="text" id="obs_aseo" placeholder="Notas sobre aseo" />
+						</div>
+
+						<div class="field" style="grid-column: 1 / -1;">
+							<label>Aseo - Fechas, Suministra y Grupo</label>
+							<div class="actions" style="padding:0; gap:6px; flex-wrap: wrap;">
+								<select id="aseoFechaSelect"></select>
+								<select id="filtroDiaAseo" title="Filtrar por día">
+									<option value="todos">Todos los días</option>
+									<option value="jueves">Solo Jueves</option>
+									<option value="domingo">Solo Domingo</option>
+								</select>
+								<select id="aseoSuministraSelect"></select>
+								<select id="aseoGrupoSelect"></select>
+								<button type="button" class="ghost" id="addAseo">Añadir</button>
+								<button type="button" class="ghost" id="clearAseo">Limpiar</button>
+							</div>
+							<small style="color: var(--muted)">Use los desplegables para agregar tareas de aseo. La fecha se sincroniza con el Mes/Año.</small>
+							<ul id="aseoList" style="margin:8px 0 0; padding-left:18px; color: var(--muted);"></ul>
+						</div>
+
+						<div class="actions">
+							<button type="button" class="ghost" id="btnEjemplo">Rellenar Ejemplo</button>
+							<button type="button" class="primary" id="btnGenerar">Generar Programa</button>
+							<button type="button" class="ghost" id="btnImprimir">Imprimir / PDF</button>
+							<button type="reset" class="ghost">Limpiar</button>
+						</div>
+					</form>
+				</div>
+			</div>
+
+			<div class="program" id="programa">
+				<div class="title">
+					<div>PROGRAMA DE PRIVILEGIOS DE SERVICIO</div>
+					<small id="fraseOut">&nbsp;</small>
+				</div>
+				<div class="month" id="mesOut">Mes Año</div>
+
+				<div class="section">
+					<h3>Programa general</h3>
+					<table>
+						<thead>
+							<tr>
+								<th class="col-fecha">Fecha</th>
+								<th class="col-acom">Acomodación</th>
+								<th class="col-rol">Micrófonos</th>
+								<th class="col-rol">Acomodación ZOOM y Vídeo</th>
+								<th class="col-rol">Sonido</th>
+								<th class="col-rol">Plataforma</th>
+							</tr>
+						</thead>
+						<tbody id="tablaGeneral"></tbody>
+					</table>
+				</div>
+
+				<div class="section" id="scSection">
+					<h3 id="tituloScOut">Asamblea con el superintendente de circuito</h3>
+					<div id="obsScOut" style="color: var(--muted); font-size: 13px;"></div>
+				</div>
+
+				<div class="section">
+					<h3>PROGRAMA PARA ABRIR Y CERRAR EL SALÓN DEL REINO</h3>
+					<div style="color: var(--muted); font-size: 13px; font-style: italic; margin: 4px 0 8px;">“Había cuatro porteros principales en los cargos de confianza.” (1 Cro. 9:26)</div>
+					<div class="subsection-title">Encargados de Abrir el Salón</div>
+					<div style="color: var(--muted); font-size: 12px; margin: 2px 0 8px;">
+						Nota: Principalmente ellos son los responsables, pero esto no quiere decir que alguién que
+						llaves no pueda abrir primero, más bien se agradece el trabajo en equipo. (Eclesiastés 4:9,10 ;7:16)
+					</div>
+					<table class="abrir-table">
+						<thead>
+							<tr>
+								<th class="fecha">Fechas</th>
+								<th class="enc">Encargado(s)</th>
+							</tr>
+						</thead>
+						<tbody id="tablaAbrir"></tbody>
+					</table>
+				</div>
+
+				<div class="section">
+					<h3>Encargados de Cerrar el Salón</h3>
+					<table>
+						<thead>
+							<tr>
+								<th>Jueves</th>
+								<th>Domingo</th>
+							</tr>
+						</thead>
+						<tbody id="tablaCerrar">
+							<tr>
+								<td id="cerrarMieOut"></td>
+								<td id="cerrarSabOut"></td>
+							</tr>
+						</tbody>
+					</table>
+				</div>
+
+				<div class="section">
+					<h3 id="tituloAseoOut">Programa de Aseo del Salón</h3>
+					<div id="obsAseoOut" style="color: var(--muted); font-size: 13px;"></div>
+					<table>
+						<thead>
+							<tr>
+								<th>Fecha</th>
+								<th>SUMINISTRA ELEMENTOS DE ASEO</th>
+								<th>Grupo</th>
+							</tr>
+						</thead>
+						<tbody id="tablaAseo"></tbody>
+					</table>
+					<div class="info-box" id="areasBox">
+						Hall de Acceso - Calle - Baño de Discapacitados - Baños - Sala B - Sala Principal
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+
+	<script>
+		function addListItem(listId, text) {
+			const list = document.getElementById(listId);
+			if (!list) return null;
+			const li = document.createElement('li');
+			li.className = 'list-item';
+			li.dataset.value = text;
+			const span = document.createElement('span');
+			span.className = 'item-text';
+			span.textContent = text;
+			const btn = document.createElement('button');
+			btn.type = 'button';
+			btn.className = 'item-remove';
+			btn.title = 'Eliminar';
+			btn.textContent = 'x';
+			btn.addEventListener('click', () => li.remove());
+			li.appendChild(span);
+			li.appendChild(btn);
+			list.appendChild(li);
+			return li;
+		}
+
+		function addPairingOrNew(listId, val) {
+			const list = document.getElementById(listId);
+			const last = list?.lastElementChild;
+			if (last) {
+				const span = last.querySelector('.item-text');
+				const current = (last.dataset.value || span?.textContent || '').trim();
+				if (current && !current.includes(';')) {
+					const updated = `${current}; ${val}`;
+					last.dataset.value = updated;
+					if (span) span.textContent = updated;
+					return;
+				}
+			}
+			addListItem(listId, val);
+		}
+
+		function getListValues(listId) {
+			return Array.from(document.querySelectorAll(`#${listId} li`)).map(li => li.dataset.value || li.textContent);
+		}
+		function splitLines(value) {
+			return value
+				.split(/\n/)
+				.map(l => l.trim())
+				.filter(Boolean);
+		}
+
+		function fillGeneral(fechas, acomodacion, microfonos, zoomVideo, sonido, plataforma) {
+			const t = document.getElementById('tablaGeneral');
+			t.innerHTML = '';
+			const f = splitLines(fechas);
+			const a = splitLines(acomodacion);
+			const m = splitLines(microfonos);
+			const z = splitLines(zoomVideo);
+			const s = splitLines(sonido);
+			const p = splitLines(plataforma);
+			const max = Math.max(f.length, a.length, m.length, z.length, s.length, p.length);
+			for (let i = 0; i < max; i++) {
+				const tr = document.createElement('tr');
+				tr.innerHTML = `
+					<td>${f[i] || ''}</td>
+					<td>${(a[i] || '').replace(/;\s*/g, ' / ')}</td>
+					<td>${m[i] || ''}</td>
+					<td>${z[i] || ''}</td>
+					<td>${(s[i] || '').replace(/;\s*/g, ' / ')}</td>
+					<td>${(p[i] || '').replace(/;\s*/g, ' / ')}</td>
+				`;
+				t.appendChild(tr);
+			}
+		}
+
+		function fillAbrir(abrir) {
+			const t = document.getElementById('tablaAbrir');
+			t.innerHTML = '';
+			const rows = splitLines(abrir);
+			for (const r of rows) {
+				// formato: "Fechas — Encargados"
+				const parts = r.split(/\s+—\s+|\s+-\s+|\s+\|\s+/);
+				const fechas = parts[0] || '';
+				const encargados = parts.slice(1).join(' ') || '';
+				const tr = document.createElement('tr');
+				tr.innerHTML = `<td class="fecha">${fechas}</td><td class="enc">${encargados}</td>`;
+				t.appendChild(tr);
+			}
+		}
+
+		function fillCerrar(cerrarMie, cerrarSab) {
+			// Obtener Mes/Año actual
+			const mesSel = document.getElementById('mesSelect').value; // Ej: "Diciembre 2025"
+			const [mesNombre, anioStr] = mesSel.split(' ');
+			const anio = parseInt(anioStr, 10);
+			const mesesFull = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+			const mesesAbbr = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
+			const dias = ['Dom.','Lun.','Mar.','Mié.','Jue.','Vie.','Sáb.'];
+			const currentMonth = Math.max(0, mesesFull.indexOf(mesNombre));
+			const currentYear = anio;
+			// Construir todas las fechas del mes
+			const fechas = [];
+			for (let d = 1; d <= 31; d++) {
+				const date = new Date(currentYear, currentMonth, d);
+				if (date.getMonth() !== currentMonth) break;
+				const dia = dias[date.getDay()];
+				const label = `${dia} ${String(d).padStart(2,'0')} ${mesesAbbr[currentMonth]}`;
+				fechas.push({dia, label});
+			}
+
+			const nombresJue = splitLines(cerrarMie);
+			const nombresDom = splitLines(cerrarSab);
+			// Filtrar fechas para Jueves y Domingo
+			const jueves = fechas.filter(f => f.dia === 'Jue.');
+			const domingo = fechas.filter(f => f.dia === 'Dom.');
+			// Combinar fecha con pareja por índice
+			const outJue = jueves.map((f, i) => {
+				const nom = nombresJue[i] || '';
+				return nom ? `${f.label} — ${nom}` : `${f.label}`;
+			}).join('<br/>');
+			const outDom = domingo.map((f, i) => {
+				const nom = nombresDom[i] || '';
+				return nom ? `${f.label} — ${nom}` : `${f.label}`;
+			}).join('<br/>');
+
+			document.getElementById('cerrarMieOut').innerHTML = outJue;
+			document.getElementById('cerrarSabOut').innerHTML = outDom;
+		}
+
+		function fillAseo(tareas) {
+			const t = document.getElementById('tablaAseo');
+			t.innerHTML = '';
+			const rows = splitLines(tareas);
+			for (const r of rows) {
+				const parts = r.split(/\s*\|\s*/);
+				const [fecha, suministros, encargado] = [parts[0]||'', parts[1]||'', parts[2]||''];
+				const tr = document.createElement('tr');
+				tr.innerHTML = `
+					<td>${fecha}</td>
+					<td>${suministros}</td>
+					<td>${encargado}</td>
+				`;
+				t.appendChild(tr);
+			}
+		}
+
+		function generar() {
+			const mesSelect = document.getElementById('mesSelect');
+			const mes = (mesSelect && mesSelect.value) || 'Diciembre 2025';
+			const frase = document.getElementById('frase').value || '';
+			const tituloSc = document.getElementById('titulo_sc').value || '';
+			const obsSc = document.getElementById('obs_sc').value || '';
+			const showSc = document.getElementById('toggle_sc').checked;
+			const fechas = getListValues('fechasList').join('\n');
+			const acomodacion = getListValues('acomodacionList').join('\n');
+			const sonido = getListValues('sonidoList').join('\n');
+			const zoomVideo = getListValues('zoomVideoList').join('\n');
+			const microfonos = getListValues('microfonosList').join('\n');
+			const plataforma = getListValues('plataformaList').join('\n');
+			const abrir = getListValues('abrirList').join('\n');
+			const cerrarMie = getListValues('cerrarMieList').join('\n');
+			const cerrarSab = getListValues('cerrarSabList').join('\n');
+			const tituloAseo = document.getElementById('titulo_aseo').value || '';
+			const obsAseo = document.getElementById('obs_aseo').value || '';
+			const tareasAseoList = Array.from(document.querySelectorAll('#aseoList li')).map(li => li.textContent).join('\n');
+			const tareasAseo = tareasAseoList || (document.getElementById('aseo_tareas')?.value || '');
+
+			document.getElementById('mesOut').textContent = mes;
+			document.getElementById('fraseOut').textContent = frase;
+			document.getElementById('tituloScOut').textContent = tituloSc || 'Asamblea con el superintendente de circuito';
+			document.getElementById('obsScOut').textContent = obsSc;
+			document.getElementById('scSection').style.display = showSc ? '' : 'none';
+			document.getElementById('tituloAseoOut').textContent = tituloAseo || 'Programa de Aseo del Salón';
+			document.getElementById('obsAseoOut').textContent = obsAseo;
+
+			fillGeneral(fechas, acomodacion, microfonos, zoomVideo, sonido, plataforma);
+			fillAbrir(abrir);
+			fillCerrar(cerrarMie, cerrarSab);
+			fillAseo(tareasAseo);
+		}
+
+		function ejemplo() {
+			const mesSelect = document.getElementById('mesSelect');
+			if (mesSelect && mesSelect.options.length) {
+				// Selecciona el mes actual si existe; si no, el primero
+				mesSelect.selectedIndex = Math.max(0, mesSelect.selectedIndex);
+			}
+			document.getElementById('frase').value = '“Puse a cargo...porque era un hombre muy confiable y temía al Dios verdadero” (Neh. 7:2)';
+			document.getElementById('titulo_sc').value = 'Asamblea con el superintendente de circuito';
+			document.getElementById('obs_sc').value = 'Notas: ajuste de programa por asamblea.';
+			document.getElementById('toggle_sc').checked = true;
+			// Rellena algunas fechas de ejemplo
+			const list = document.getElementById('fechasList');
+			list.innerHTML = '';
+			['Mié. 03 Dic','Sáb. 07 Dic','Mié. 10 Dic','Sáb. 14 Dic'].forEach(f => {
+				const li = document.createElement('li');
+				li.textContent = f;
+				list.appendChild(li);
+			});
+			const acomList = document.getElementById('acomodacionList');
+			acomList.innerHTML = '';
+			['Fabián Martínez; Thomas Díaz','Manuel Mondaca; David Espinoza','Gabriel Espinoza; Javier Valdés','Matías López; Diego Benítez'].forEach(item => addListItem('acomodacionList', item));
+			const sonList = document.getElementById('sonidoList');
+			sonList.innerHTML = '';
+			['Matías López','Javier Valdés','Fernando Hidalgo','Ángel Maldonado'].forEach(item => addListItem('sonidoList', item));
+			const plaList = document.getElementById('plataformaList');
+			plaList.innerHTML = '';
+			['Fernando Diaz E.','Sergio Palma L.','ASAMBLEA REGIONAL'].forEach(item => addListItem('plataformaList', item));
+			const abrirList = document.getElementById('abrirList');
+			abrirList.innerHTML = '';
+			[
+				'03 y 06 Dic. — Víctor Martínez - Carlos Morales',
+				'10 y 13 Dic. — Víctor Ramirez - Richard Parra',
+				'17 y 20 Dic. — José Contreras L. - Javier Valdés R.',
+				'24 y 27 Dic. — Claudio Ramos S. - Matthias Lopez',
+				'31 y 03 Ene. — José Arévalo Astudillo - Jovino Muñoz González'
+			].forEach(item => addListItem('abrirList', item));
+			const cmList = document.getElementById('cerrarMieList');
+			cmList.innerHTML = '';
+			[
+				'Víctor Martínez - Carlos Morales',
+				'Víctor Ramirez - Richard Parra',
+				'José Contreras L. - Javier Valdés R.',
+				'Claudio Ramos S. - Matthias Lopez',
+				'José Arévalo Astudillo - Jovino Muñoz González',
+				'Cristian Salazar Correa - Miguel García Fernández',
+				'José Quevedo - Manuel Monsalve',
+				'José Cuevas - Pedro Abarza',
+				'Juan Ibáñez Luengo - Sergio Palma Leyton',
+				'Enzo Palma Retamal -  Salvador Quiroz'
+			].forEach(item => addListItem('cerrarMieList', item));
+			const csList = document.getElementById('cerrarSabList');
+			csList.innerHTML = '';
+			[
+				'Víctor Martínez - Carlos Morales',
+				'Víctor Ramirez - Richard Parra',
+				'José Contreras L. - Javier Valdés R.',
+				'Claudio Ramos S. - Matthias Lopez',
+				'José Arévalo Astudillo - Jovino Muñoz González',
+				'Cristian Salazar Correa - Miguel García Fernández'
+			].forEach(item => addListItem('cerrarSabList', item));
+			document.getElementById('titulo_aseo').value = 'Programa de Aseo del Salón';
+			document.getElementById('obs_aseo').value = '“Hemos reconocido la importancia de no descuidar a la casa de nuestro Dios” (Neh. 10:39).';
+			const aseoList = document.getElementById('aseoList');
+			aseoList.innerHTML = '';
+			[
+				'Mié. 04 Dic | Pedro Díaz Estay | 1',
+				'Sáb. 07 Dic | Thomás Diaz F. | 2',
+				'Mié. 10 Dic | Francisco Arévalo Aravena | 3',
+				'Sáb. 14 Dic | Pedro Díaz Estay | 4'
+			].forEach(item => addListItem('aseoList', item));
+			generar();
+		}
+
+		document.getElementById('btnGenerar').addEventListener('click', generar);
+		document.getElementById('btnEjemplo').addEventListener('click', ejemplo);
+		document.getElementById('btnImprimir').addEventListener('click', () => window.print());
+
+		// Poblar lista de meses/año en español
+		function populateMeses() {
+			const meses = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+			const sel = document.getElementById('mesSelect');
+			sel.innerHTML = '';
+			const unicoAnio = 2026; // Mostrar solo 2026
+			for (let m = 0; m < 12; m++) {
+				const opt = document.createElement('option');
+				opt.value = `${meses[m]} ${unicoAnio}`;
+				opt.textContent = `${meses[m]} ${unicoAnio}`;
+				sel.appendChild(opt);
+			}
+			// Seleccionar Enero 2026 por defecto
+			sel.selectedIndex = 0;
+		}
+
+		populateMeses();
+		// Poblar select de "Programa general - Fechas" con días de la semana
+		function populateFechasSelect() {
+			const dias = ['Dom.','Lun.','Mar.','Mié.','Jue.','Vie.','Sáb.'];
+			const mesesAbbr = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
+			const sel = document.getElementById('fechasSelect');
+			sel.innerHTML = '';
+			// Tomar Mes/Año seleccionados
+			const mesSel = document.getElementById('mesSelect').value; // Ej: "Diciembre 2025"
+			const [mesNombre, anioStr] = mesSel.split(' ');
+			const anio = parseInt(anioStr, 10);
+			const mesesFull = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+			const currentMonth = Math.max(0, mesesFull.indexOf(mesNombre));
+			const currentYear = anio;
+			const filtro = (document.getElementById('filtroDiaFechas')?.value) || 'todos';
+			// Genera días para el mes elegido (1..31)
+			for (let d = 1; d <= 31; d++) {
+				const date = new Date(currentYear, currentMonth, d);
+				if (date.getMonth() !== currentMonth) break; // termina al cambiar de mes
+				const dia = dias[date.getDay()];
+				if (filtro === 'jueves' && dia !== 'Jue.') continue;
+				if (filtro === 'domingo' && dia !== 'Dom.') continue;
+				const label = `${dia} ${String(d).padStart(2,'0')} ${mesesAbbr[currentMonth]}`;
+				const opt = document.createElement('option');
+				opt.value = label;
+				opt.textContent = label;
+				sel.appendChild(opt);
+			}
+		}
+
+		populateFechasSelect();
+		// Poblar select de Acomodación con lista fija
+		function populateAcomodacionSelect() {
+			const nombres = [
+				'Ángelo Maldonado D.',
+				'Carlos Morales V.',
+				'David Ramírez A.',
+				'Fernando Flores B.',
+				'Fabian Martínez R.',
+				'Francisco Arévalo A.',
+				'Fernando Diaz E.',
+				'Javier Valdés R.',
+				'Juan Ibáñez L.',
+				'Manuel Monsalve C.',
+				'Miguel García F.',
+				'Pedro Abarza C.',
+				'Pedro Díaz E.',
+				'Raúl Geywitz G.',
+				'Salvador Quiroz G.',
+				'Sergio Palma L.',
+				'Víctor Martínez M.',
+				'Yasser Villegas De V.',
+				'Yeremie Contreras D.',
+				'ASAMBLEA REGIONAL',
+				'ASAMBLEA ESPECIAL'
+			];
+			// Ordenar alfabéticamente excepto las entradas de asamblea, que van al final
+			const especiales = ['ASAMBLEA REGIONAL','ASAMBLEA ESPECIAL'];
+			const normales = nombres.filter(n => !especiales.includes(n)).sort((a,b) => a.localeCompare(b, 'es'));
+			const ordenFinal = [...normales, ...especiales];
+			const sel = document.getElementById('acomodacionSelect');
+			sel.innerHTML = '';
+			// Opciones de dos nombres típicas: se agrega de a uno y luego se puede combinar escribiendo "Nombre 1; Nombre 2"
+			ordenFinal.forEach(n => {
+				const opt = document.createElement('option');
+				opt.value = n;
+				opt.textContent = n;
+				sel.appendChild(opt);
+			});
+		}
+
+		populateAcomodacionSelect();
+		// Poblar select de Micrófonos con listado provisto
+		function populateMicrofonosSelect() {
+			const nombres = [
+				'David Ramírez A.',
+				'Diego Palma V.',
+				'Fabian Martínez R.',
+				'Fernando Diaz E.',
+				'Fernando Flores B.',
+				'Héctor Torres S.',
+				'José Monardes C.',
+				'Pedro Diaz E.',
+				'Salvador Quiroz G.',
+				'Samuel Parra S.',
+				'Sebastián Villegas S.',
+				'Thomás Diaz F.',
+				'Ángelo Maldonado D.',
+				'Carlos Morales V.',
+				'Francisco Arévalo A.',
+				'Javier Valdés R.',
+				'Juan Ibáñez L.',
+				'Manuel Monsalve C.',
+				'Miguel García F.',
+				'Pedro Abarza C.',
+				'Pedro Díaz E.',
+				'Raúl Geywitz G.',
+				'Sergio Palma L.',
+				'Víctor Martínez M.',
+				'Yasser Villegas De V.',
+				'Yeremie Contreras D.',
+				'Benjamin López B.',
+				'ASAMBLEA REGIONAL',
+				'ASAMBLEA ESPECIAL'
+			];
+			// Ordenar alfabéticamente y dejar asambleas al final
+			const especiales = ['ASAMBLEA REGIONAL','ASAMBLEA ESPECIAL'];
+			const dedup = Array.from(new Set(nombres));
+			const normales = dedup.filter(n => !especiales.includes(n)).sort((a,b) => a.localeCompare(b, 'es'));
+			const ordenFinal = [...normales, ...especiales];
+			const sel = document.getElementById('microfonosSelect');
+			if (!sel) return;
+			sel.innerHTML = '';
+			ordenFinal.forEach(n => {
+				const opt = document.createElement('option');
+				opt.value = n;
+				opt.textContent = n;
+				sel.appendChild(opt);
+			});
+		}
+
+		populateMicrofonosSelect();
+		// Poblar select de Acomodación ZOOM y Vídeo (rol único)
+		function populateZoomVideoSelect() {
+			const nombres = [
+				'Ángelo Maldonado D.',
+				'Javier Valdés R.',
+				'José Monardes C.',
+				'Manuel Monsalve C.',
+				'Mathías López B.',
+				'Sebastián Villegas S.',
+				'Yasser Villegas De V.',
+				'Yeremie Contreras D.',
+				'David Ramírez A.',
+				'ASAMBLEA REGIONAL',
+				'ASAMBLEA ESPECIAL'
+			];
+			const sel = document.getElementById('zoomVideoSelect');
+			if (!sel) return;
+			sel.innerHTML = '';
+			const especiales = ['ASAMBLEA REGIONAL','ASAMBLEA ESPECIAL'];
+			const normales = nombres.filter(n => !especiales.includes(n)).sort((a,b) => a.localeCompare(b, 'es'));
+			const ordenFinal = [...normales, ...especiales];
+			ordenFinal.forEach(n => {
+				const opt = document.createElement('option');
+				opt.value = n;
+				opt.textContent = n;
+				sel.appendChild(opt);
+			});
+		}
+
+		populateZoomVideoSelect();
+		// Poblar select de Sonido con lista específica por rol
+		function populateSonidoSelect() {
+			const nombresSonido = [
+				'Ángelo Maldonado D.','Benjamín López B.','Fernando Flores B.','Javier Valdés R.',
+				'José Monardes C.','Manuel Monsalve C.','Mathías López B.','Sebastian Villegas S.',
+				'Yasser Villegas De V.','Yeremie Contreras D.','ASAMBLEA REGIONAL','ASAMBLEA ESPECIAL'
+			];
+			const sel = document.getElementById('sonidoSelect');
+			sel.innerHTML = '';
+			const especiales = ['ASAMBLEA REGIONAL','ASAMBLEA ESPECIAL'];
+			const normales = nombresSonido.filter(n => !especiales.includes(n)).sort((a,b) => a.localeCompare(b, 'es'));
+			const ordenFinal = [...normales, ...especiales];
+			ordenFinal.forEach(n => {
+				const opt = document.createElement('option');
+				opt.value = n;
+				opt.textContent = n;
+				sel.appendChild(opt);
+			});
+		}
+
+		populateSonidoSelect();
+		// Poblar select de Plataforma con lista específica por rol
+		function populatePlataformaSelect() {
+			const nombresPlataforma = [
+				'Fernando Diaz E.', 'Sergio Palma L.', 'ASAMBLEA REGIONAL', 'ASAMBLEA ESPECIAL'
+			];
+			const sel = document.getElementById('plataformaSelect');
+			sel.innerHTML = '';
+			const especiales = ['ASAMBLEA REGIONAL','ASAMBLEA ESPECIAL'];
+			const normales = nombresPlataforma.filter(n => !especiales.includes(n)).sort((a,b) => a.localeCompare(b, 'es'));
+			const ordenFinal = [...normales, ...especiales];
+			ordenFinal.forEach(n => {
+				const opt = document.createElement('option');
+				opt.value = n;
+				opt.textContent = n;
+				sel.appendChild(opt);
+			});
+		}
+
+		populatePlataformaSelect();
+		// Poblar lista de encargados para Abrir Salón
+		function populateAbrirEncSelect() {
+			// Lista solicitada para Encargados de Abrir
+			const nombres = [
+				'Manuel Monsalve C.',
+				'Raul Geywitz G.',
+				'Juan Ibáñez L.(S.I.)'
+			];
+			const sel = document.getElementById('abrirEncSelect');
+			sel.innerHTML = '';
+			nombres.forEach(p => {
+				const opt = document.createElement('option');
+				opt.value = p;
+				opt.textContent = p;
+				sel.appendChild(opt);
+			});
+		}
+
+		populateAbrirEncSelect();
+		// Poblar selector de fecha para Abrir (sincronizado con Mes/Año)
+		function populateAbrirFechaSelect() {
+			const dias = ['Dom.','Lun.','Mar.','Mié.','Jue.','Vie.','Sáb.'];
+			const mesesAbbr = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
+			const mesSel = document.getElementById('mesSelect').value; // Ej: "Diciembre 2025"
+			const [mesNombre, anioStr] = mesSel.split(' ');
+			const anio = parseInt(anioStr, 10);
+			const mesesFull = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+			const currentMonth = Math.max(0, mesesFull.indexOf(mesNombre));
+			const currentYear = anio;
+			const sel = document.getElementById('abrirFechaSelect');
+			sel.innerHTML = '';
+			const filtro = (document.getElementById('filtroDiaAbrir')?.value) || 'todos';
+			for (let d = 1; d <= 31; d++) {
+				const date = new Date(currentYear, currentMonth, d);
+				if (date.getMonth() !== currentMonth) break;
+				const dia = dias[date.getDay()];
+				if (filtro === 'jueves' && dia !== 'Jue.') continue;
+				if (filtro === 'domingo' && dia !== 'Dom.') continue;
+				const label = `${dia} ${String(d).padStart(2,'0')} ${mesesAbbr[currentMonth]}`;
+				const opt = document.createElement('option');
+				opt.value = label;
+				opt.textContent = label;
+				sel.appendChild(opt);
+			}
+		}
+
+		populateAbrirFechaSelect();
+
+		// Poblar select de Aseo - Fecha (sin filtros, sincronizado con Mes/Año)
+		function populateAseoFechaSelect() {
+			const dias = ['Dom.','Lun.','Mar.','Mié.','Jue.','Vie.','Sáb.'];
+			const mesesAbbr = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
+			const mesSel = document.getElementById('mesSelect').value;
+			const [mesNombre, anioStr] = mesSel.split(' ');
+			const anio = parseInt(anioStr, 10);
+			const mesesFull = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+			const currentMonth = Math.max(0, mesesFull.indexOf(mesNombre));
+			const currentYear = anio;
+			const sel = document.getElementById('aseoFechaSelect');
+			if (!sel) return;
+			sel.innerHTML = '';
+			const filtro = (document.getElementById('filtroDiaAseo')?.value) || 'todos';
+			for (let d = 1; d <= 31; d++) {
+				const date = new Date(currentYear, currentMonth, d);
+				if (date.getMonth() !== currentMonth) break;
+				const dia = dias[date.getDay()];
+				if (filtro === 'jueves' && dia !== 'Jue.') continue;
+				if (filtro === 'domingo' && dia !== 'Dom.') continue;
+				const label = `${dia} ${String(d).padStart(2,'0')} ${mesesAbbr[currentMonth]}`;
+				const opt = document.createElement('option');
+				opt.value = label;
+				opt.textContent = label;
+				sel.appendChild(opt);
+			}
+		}
+
+		populateAseoFechaSelect();
+
+		// Poblar select de Aseo - Suministra con nombres solicitados
+		function populateAseoSuministraSelect() {
+			const nombres = [
+				'Pedro Díaz Estay',
+				'Thomás Diaz F.',
+				'Francisco Arévalo Aravena'
+			];
+			const sel = document.getElementById('aseoSuministraSelect');
+			if (!sel) return;
+			sel.innerHTML = '';
+			nombres.forEach(n => {
+				const opt = document.createElement('option');
+				opt.value = n;
+				opt.textContent = n;
+				sel.appendChild(opt);
+			});
+		}
+
+		populateAseoSuministraSelect();
+
+		// Poblar select de Aseo - Grupo del 1 al 10
+		function populateAseoGrupoSelect() {
+			const sel = document.getElementById('aseoGrupoSelect');
+			if (!sel) return;
+			sel.innerHTML = '';
+			for (let i = 1; i <= 10; i++) {
+				const opt = document.createElement('option');
+				opt.value = String(i);
+				opt.textContent = String(i);
+				sel.appendChild(opt);
+			}
+		}
+
+		populateAseoGrupoSelect();
+		document.getElementById('addAbrir').addEventListener('click', () => {
+			const fechaSel = document.getElementById('abrirFechaSelect').value;
+			const fechaCustom = document.getElementById('abrirFechaCustom').value.trim();
+			const fecha = fechaCustom || fechaSel;
+			const enc = document.getElementById('abrirEncSelect').value;
+			if (!fecha || !enc) return;
+			addListItem('abrirList', `${fecha} — ${enc}`);
+			document.getElementById('abrirFechaCustom').value = '';
+		});
+		document.getElementById('clearAbrir').addEventListener('click', () => {
+			document.getElementById('abrirList').innerHTML = '';
+		});
+		// Recalcular el selector de fecha Abrir cuando cambie Mes/Año
+		document.getElementById('mesSelect').addEventListener('change', () => {
+			populateAbrirFechaSelect();
+		});
+		document.getElementById('filtroDiaAbrir').addEventListener('change', () => {
+			populateAbrirFechaSelect();
+		});
+		// Recalcular fecha de Aseo cuando cambie Mes/Año
+		document.getElementById('mesSelect').addEventListener('change', () => {
+			populateAseoFechaSelect();
+		});
+		document.getElementById('filtroDiaAseo').addEventListener('change', () => {
+			populateAseoFechaSelect();
+		});
+
+		// Aseo: añadir y limpiar lista
+		document.getElementById('addAseo').addEventListener('click', () => {
+			const f = document.getElementById('aseoFechaSelect').value;
+			const s = document.getElementById('aseoSuministraSelect').value;
+			const g = document.getElementById('aseoGrupoSelect').value;
+			if (!f || !s || !g) return;
+			addListItem('aseoList', `${f} | ${s} | ${g}`);
+		});
+		document.getElementById('clearAseo').addEventListener('click', () => {
+			document.getElementById('aseoList').innerHTML = '';
+		});
+		// Poblar select de Cerrar Salón - Miércoles con parejas provistas
+		function populateCerrarMieSelect() {
+			const parejas = [
+				'Víctor Martínez - Carlos Morales',
+				'Víctor Ramirez - Richard Parra',
+				'José Contreras L. - Javier Valdés R.',
+				'Claudio Ramos S. - Matthias Lopez',
+				'José Arévalo Astudillo - Jovino Muñoz González',
+				'Cristian Salazar Correa - Miguel García Fernández',
+				'José Quevedo - Manuel Monsalve',
+				'José Cuevas - Pedro Abarza',
+				'Juan Ibáñez Luengo - Sergio Palma Leyton',
+				'Enzo Palma Retamal -  Salvador Quiroz'
+			];
+			const sel = document.getElementById('cerrarMieSelect');
+			sel.innerHTML = '';
+			parejas.forEach(p => {
+				const opt = document.createElement('option');
+				opt.value = p;
+				opt.textContent = p;
+				sel.appendChild(opt);
+			});
+		}
+
+		populateCerrarMieSelect();
+		// Poblar select de Cerrar Salón - Sábado con parejas provistas
+		function populateCerrarSabSelect() {
+			// Usar el mismo listado que Cerrar Jueves
+			const parejas = [
+				'Víctor Martínez - Carlos Morales',
+				'Víctor Ramirez - Richard Parra',
+				'José Contreras L. - Javier Valdés R.',
+				'Claudio Ramos S. - Matthias Lopez',
+				'José Arévalo Astudillo - Jovino Muñoz González',
+				'Cristian Salazar Correa - Miguel García Fernández',
+				'José Quevedo - Manuel Monsalve',
+				'José Cuevas - Pedro Abarza',
+				'Juan Ibáñez Luengo - Sergio Palma Leyton',
+				'Enzo Palma Retamal -  Salvador Quiroz'
+			];
+			const sel = document.getElementById('cerrarSabSelect');
+			sel.innerHTML = '';
+			parejas.forEach(p => {
+				const opt = document.createElement('option');
+				opt.value = p;
+				opt.textContent = p;
+				sel.appendChild(opt);
+			});
+		}
+
+		populateCerrarSabSelect();
+		document.getElementById('addCerrarSab').addEventListener('click', () => {
+			const sel = document.getElementById('cerrarSabSelect');
+			const val = sel.value;
+			if (!val) return;
+			addListItem('cerrarSabList', val);
+		});
+		document.getElementById('clearCerrarSab').addEventListener('click', () => {
+			document.getElementById('cerrarSabList').innerHTML = '';
+		});
+		document.getElementById('addCerrarMie').addEventListener('click', () => {
+			const sel = document.getElementById('cerrarMieSelect');
+			const val = sel.value;
+			if (!val) return;
+			addListItem('cerrarMieList', val);
+		});
+		document.getElementById('clearCerrarMie').addEventListener('click', () => {
+			document.getElementById('cerrarMieList').innerHTML = '';
+		});
+		document.getElementById('addPlataforma').addEventListener('click', () => {
+			const sel = document.getElementById('plataformaSelect');
+			const val = sel.value;
+			if (!val) return;
+			addListItem('plataformaList', val);
+		});
+		document.getElementById('clearPlataforma').addEventListener('click', () => {
+			document.getElementById('plataformaList').innerHTML = '';
+		});
+		document.getElementById('addSonido').addEventListener('click', () => {
+			const sel = document.getElementById('sonidoSelect');
+			const val = sel.value;
+			if (!val) return;
+			addListItem('sonidoList', val);
+		});
+		document.getElementById('clearSonido').addEventListener('click', () => {
+			document.getElementById('sonidoList').innerHTML = '';
+		});
+		document.getElementById('addAcomodacion').addEventListener('click', () => {
+			const sel = document.getElementById('acomodacionSelect');
+			const val = sel.value;
+			if (!val) return;
+			// Si el último elemento tiene un solo nombre, permitir concatenar con "; Nombre"
+			addPairingOrNew('acomodacionList', val);
+		});
+		document.getElementById('clearAcomodacion').addEventListener('click', () => {
+			document.getElementById('acomodacionList').innerHTML = '';
+		});
+		// ZOOM/Vídeo: añadir y limpiar (rol único)
+		document.getElementById('addZoomVideo').addEventListener('click', () => {
+			const sel = document.getElementById('zoomVideoSelect');
+			const val = sel.value;
+			if (!val) return;
+			addListItem('zoomVideoList', val);
+		});
+		document.getElementById('clearZoomVideo').addEventListener('click', () => {
+			document.getElementById('zoomVideoList').innerHTML = '';
+		});
+		// Micrófonos: añadir y limpiar
+		document.getElementById('addMicrofonos').addEventListener('click', () => {
+			const sel = document.getElementById('microfonosSelect');
+			const val = sel.value;
+			if (!val) return;
+			addPairingOrNew('microfonosList', val);
+		});
+		document.getElementById('clearMicrofonos').addEventListener('click', () => {
+			document.getElementById('microfonosList').innerHTML = '';
+		});
+		// Re-poblar fechas cuando cambie el Mes/Año
+		document.getElementById('mesSelect').addEventListener('change', () => {
+			populateFechasSelect();
+			// opcional: limpiar lista ya añadida para evitar mezcla de meses
+			// document.getElementById('fechasList').innerHTML = '';
+		});
+		document.getElementById('filtroDiaFechas').addEventListener('change', () => {
+			populateFechasSelect();
+		});
+
+		// Navegación rápida de meses
+		document.getElementById('prevMes').addEventListener('click', () => {
+			const sel = document.getElementById('mesSelect');
+			if (sel.selectedIndex > 0) {
+				sel.selectedIndex -= 1;
+				sel.dispatchEvent(new Event('change'));
+			}
+		});
+		document.getElementById('nextMes').addEventListener('click', () => {
+			const sel = document.getElementById('mesSelect');
+			if (sel.selectedIndex < sel.options.length - 1) {
+				sel.selectedIndex += 1;
+				sel.dispatchEvent(new Event('change'));
+			}
+		});
+		document.getElementById('addFecha').addEventListener('click', () => {
+			const sel = document.getElementById('fechasSelect');
+			const val = sel.value;
+			if (!val) return;
+			addListItem('fechasList', val);
+		});
+		document.getElementById('clearFechas').addEventListener('click', () => {
+			document.getElementById('fechasList').innerHTML = '';
+		});
+		// Inicial: muestra ejemplo para visualizar formato
+		ejemplo();
+	</script>
+</body>
+</html>
