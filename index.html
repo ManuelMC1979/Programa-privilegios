@@ -498,7 +498,9 @@
 			const rows = splitLines(tareas);
 			for (const r of rows) {
 				const parts = r.split(/\s*\|\s*/);
-				const [fecha, suministros, encargado] = [parts[0]||'', parts[1]||'', parts[2]||''];
+				let [fecha, suministros, encargado] = [parts[0]||'', parts[1]||'', parts[2]||''];
+				// Quitar una 'x' final si aparece en el grupo al imprimir
+				encargado = (encargado || '').replace(/\s*x$/i, '');
 				const tr = document.createElement('tr');
 				tr.innerHTML = `
 					<td>${fecha}</td>
@@ -767,6 +769,7 @@
 				'José Monardes C.',
 				'Manuel Monsalve C.',
 				'Mathías López B.',
+				'Fernando Flores B.',
 				'Sebastián Villegas S.',
 				'Yasser Villegas De V.',
 				'Yeremie Contreras D.',
