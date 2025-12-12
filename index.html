@@ -21,7 +21,7 @@
 		.container { max-width: 1020px; margin: 18px auto; padding: 0 10px; }
 
 		/* Header */
-		.header { background: #ffffff; color: #000000; padding: 14px 18px; border-radius: 8px 8px 0 0; box-shadow: 0 4px 12px rgba(0,0,0,0.06); border: 1px solid var(--border); border-bottom: none; }
+		.header { background: #ffffff; color: #000000; padding: 14px 18px; border-radius: 8px 8px 0 0; box-shadow: 0 4px 12px rgba(0,0,0,0.06); border: 1px solid var(--border); border-bottom: none; text-align: center; }
 		.header h1 { margin: 0; font-size: 19px; letter-spacing: 0.2px; font-weight: 700; color: #000000; }
 		.header small { display: block; margin-top: 4px; color: #000000; font-size: 12px; }
 
@@ -51,25 +51,32 @@
 
 		/* Resultado (Plantilla) */
 		.program { background: var(--white); border: 1px solid var(--border); border-radius: 8px; overflow: hidden; }
-		.program .title { background: var(--primary); color: var(--white); padding: 10px 14px; font-weight: 700; display: flex; align-items: center; justify-content: space-between; }
+		.program .title { background: var(--primary); color: var(--white); padding: 10px 14px; font-weight: 700; display: flex; align-items: center; justify-content: center; gap: 12px; text-align: center; }
+		.program .title .cong { color: var(--title-light); font-weight: 600; }
 		.program .title small { color: var(--title-light); font-weight: 400; }
-		.program .month { background: var(--primary-2); color: var(--white); padding: 8px 14px; font-weight: 700; }
+		.program .month { background: var(--primary-2); color: var(--white); padding: 8px 14px; font-weight: 700; text-align: center; display: flex; align-items: center; justify-content: center; gap: 16px; }
 		.program .section { padding: 10px 14px; border-top: 1px solid var(--border); }
 		.program table { width: 100%; border-collapse: collapse; table-layout: fixed; }
 		.program th { background: #dbe9f6; color: #113a5d; font-weight: 700; font-size: 13px; border: 1px solid var(--border); padding: 6px 8px; }
-		.program td { border: 1px solid var(--border); padding: 6px 8px; font-size: 13px; }
+		.program td { border: 1px solid var(--border); padding: 6px 8px; font-size: 13px; text-align: center; }
+		/* Evitar salto de línea en Micrófonos y recortar con elipsis si no cabe */
+		.program td.mic { white-space: nowrap !important; overflow: hidden; text-overflow: ellipsis; }
 		/* Anchos aproximados según el documento */
-		.col-fecha { width: 10%; }
-		.col-acom { width: 24%; }
+		.col-fecha { width: 6%; }
+		.col-acom { width: 20%; }
+		/* Reducir ancho de Sonido y Plataforma para dar más espacio a otras columnas */
+		.program thead th:nth-child(5), .program tbody td:nth-child(5) { width: 12%; }
+		.program thead th:nth-child(6), .program tbody td:nth-child(6) { width: 12%; }
 		.col-rol { width: 16%; }
-		.program .section h3 { margin: 0 0 8px; color: var(--primary); font-size: 15px; }
+		.program .section h3 { margin: 0 0 8px; color: var(--primary); font-size: 15px; text-align: center; }
+		.subsection-title { text-align: center; }
 
 		/* Subtítulo dentro de secciones */
 		.subsection-title { color: var(--primary); font-weight: 700; font-size: 14px; margin: 0 0 6px 0; }
 
 		/* Ajustes específicos Abrir Salón */
-		.abrir-table th.fecha { width: 12%; }
-		.abrir-table th.enc { width: 88%; }
+		.abrir-table th.fecha, .abrir-table td.fecha { width: 22%; }
+		.abrir-table th.enc, .abrir-table td.enc { width: 78%; }
 		.abrir-table tbody td.enc { font-size: 15px; text-align: center; }
 
 		/* Cerrar Salón: centrar nombres */
@@ -93,6 +100,8 @@
 			.program .month { background: #1f6fb4 !important; color: #ffffff !important; }
 			.program th { background: #c2dbf5 !important; color: #0a2741 !important; border-color: #8fb3d6 !important; }
 			.program td { border-color: #8fb3d6 !important; }
+			/* Fondo azul para el recuadro de áreas al imprimir */
+			.info-box { background: #c2dbf5 !important; color: #0a2741 !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
 		}
 	</style>
 </head>
@@ -111,6 +120,10 @@
 						<div class="field">
 							<label>Mes y Año</label>
 							<select id="mesSelect"></select>
+						</div>
+						<div class="field">
+							<label>Nombre de la congregación</label>
+							<input type="text" id="congregacion" value="CONGREGACION LONCOMILLA" />
 						</div>
 						<div class="field">
 							<label>Frase superior</label>
@@ -225,6 +238,7 @@
 							<label>Cerrar Salón - Jueves</label>
 							<div class="actions" style="padding:0; gap:6px; flex-wrap: wrap;">
 								<select id="cerrarMieSelect"></select>
+								<input id="cerrarMieFechaCustom" type="text" placeholder="Fecha personalizada (opcional)" style="flex:1;" />
 								<button type="button" class="ghost" id="addCerrarMie">Añadir</button>
 								<button type="button" class="ghost" id="clearCerrarMie">Limpiar</button>
 							</div>
@@ -282,9 +296,10 @@
 			<div class="program" id="programa">
 				<div class="title">
 					<div>PROGRAMA DE PRIVILEGIOS DE SERVICIO</div>
+					<span class="cong" id="congregacionOut">CONGREGACION LONCOMILLA</span>
 					<small id="fraseOut">&nbsp;</small>
 				</div>
-				<div class="month" id="mesOut">Mes Año</div>
+				<div class="month"><span id="mesOut">Mes Año</span></div>
 
 				<div class="section">
 					<h3>Programa general</h3>
@@ -332,12 +347,14 @@
 					<table>
 						<thead>
 							<tr>
+								<th>Fecha</th>
 								<th>Jueves</th>
 								<th>Domingo</th>
 							</tr>
 						</thead>
 						<tbody id="tablaCerrar">
 							<tr>
+								<td id="cerrarFechasOut"></td>
 								<td id="cerrarMieOut"></td>
 								<td id="cerrarSabOut"></td>
 							</tr>
@@ -370,12 +387,14 @@
 		function addListItem(listId, text) {
 			const list = document.getElementById(listId);
 			if (!list) return null;
+			// Sanitizar texto antes de insertar (eliminar inicial del segundo apellido y segundo apellido)
+			const sanitizedText = sanitizePeopleString(text);
 			const li = document.createElement('li');
 			li.className = 'list-item';
-			li.dataset.value = text;
+			li.dataset.value = sanitizedText;
 			const span = document.createElement('span');
 			span.className = 'item-text';
-			span.textContent = text;
+			span.textContent = sanitizedText;
 			const btn = document.createElement('button');
 			btn.type = 'button';
 			btn.className = 'item-remove';
@@ -388,14 +407,76 @@
 			return li;
 		}
 
+		// Sanitizador: elimina segundos apellidos o iniciales finales en nombres
+		function sanitizePersonName(name) {
+			// Quita sufijo "S.I." y iniciales sueltas al final, pero conserva nombre y apellidos completos.
+			// Ejemplos a limpiar: "Juan Pérez R.", "Yasser Villegas De V.", "Juan Ibáñez L.(S.I.)"
+			let n = (name || '')
+				.replace(/\(\s*S\.I\.\s*\)$/iu, '')
+				.replace(/\s+S\.I\.?$/iu, '')
+				.replace(/\s+(?:de|del|la|las|los|y)\s*[A-ZÁÉÍÓÚÑ]\.\s*$/iu, '')
+				.replace(/\s+[A-ZÁÉÍÓÚÑ]\.\s*$/iu, '')
+				.trim();
+			// No recortar tokens: mantener nombre y apellido(s) tal como ingresado
+			return n;
+		}
+
+		function sanitizePeopleString(text) {
+			// Preserva ';' como separador de parejas; dentro de cada parte, normaliza nombres separados por '-' o ','
+			const pairs = (text || '').split(/\s*;\s*/);
+			const normalized = pairs.map(pair =>
+				pair
+					.split(/\s*-\s*|\s*,\s*/)
+					.map(p => sanitizePersonName(p))
+					.join(' - ')
+			);
+			return normalized.join('; ');
+		}
+
+		function sanitizeExistingList(listId){
+			const items = Array.from(document.querySelectorAll('#'+listId+' li'));
+			items.forEach(li => {
+				const original = li.dataset.value || li.textContent || '';
+				const clean = sanitizePeopleString(original);
+				li.dataset.value = clean;
+				const span = li.querySelector('.item-text');
+				if (span) span.textContent = clean;
+			});
+		}
+
+		function sanitizeAllLists(){
+			// Sanitizar solo listas de nombres puros.
+			['acomodacionList','microfonosList','zoomVideoList','sonidoList','plataformaList','cerrarMieList','cerrarSabList']
+				.forEach(sanitizeExistingList);
+		}
+
+		// Sanitizar específicamente Abrir: conservar fecha y limpiar solo nombres
+		function sanitizeAbrirList(){
+			const items = Array.from(document.querySelectorAll('#abrirList li'));
+			items.forEach(li => {
+				const original = li.dataset.value || li.textContent || '';
+				const parts = original.split(/\s+—\s+/);
+				if (parts.length >= 2){
+					const fecha = parts[0].trim();
+					const nombres = sanitizePeopleString(parts.slice(1).join(' — '));
+					const combined = `${fecha} — ${nombres}`;
+					li.dataset.value = combined;
+					const span = li.querySelector('.item-text');
+					if (span) span.textContent = combined;
+				}
+			});
+		}
+
 		function addPairingOrNew(listId, val) {
 			const list = document.getElementById(listId);
 			const last = list?.lastElementChild;
 			if (last) {
 				const span = last.querySelector('.item-text');
 				const current = (last.dataset.value || span?.textContent || '').trim();
-				if (current && !current.includes(';')) {
-					const updated = `${current}; ${val}`;
+				// Si ya hay una pareja en la última fila, no concatenar más
+				const alreadyPaired = /;|\s-\s/.test(current);
+				if (current && !alreadyPaired) {
+					const updated = sanitizePeopleString(`${current}; ${val}`);
 					last.dataset.value = updated;
 					if (span) span.textContent = updated;
 					return;
@@ -418,18 +499,18 @@
 			const t = document.getElementById('tablaGeneral');
 			t.innerHTML = '';
 			const f = splitLines(fechas);
-			const a = splitLines(acomodacion);
-			const m = splitLines(microfonos);
-			const z = splitLines(zoomVideo);
-			const s = splitLines(sonido);
-			const p = splitLines(plataforma);
+			const a = splitLines(acomodacion).map(sanitizePeopleString);
+			const m = splitLines(microfonos).map(sanitizePeopleString);
+			const z = splitLines(zoomVideo).map(sanitizePersonName);
+			const s = splitLines(sonido).map(sanitizePersonName);
+			const p = splitLines(plataforma).map(sanitizePersonName);
 			const max = Math.max(f.length, a.length, m.length, z.length, s.length, p.length);
 			for (let i = 0; i < max; i++) {
 				const tr = document.createElement('tr');
 				tr.innerHTML = `
 					<td>${f[i] || ''}</td>
 					<td>${(a[i] || '').replace(/;\s*/g, ' / ')}</td>
-					<td>${m[i] || ''}</td>
+					<td class="mic">${(m[i] || '').replace(/;\s*/g, ' / ')}</td>
 					<td>${z[i] || ''}</td>
 					<td>${(s[i] || '').replace(/;\s*/g, ' / ')}</td>
 					<td>${(p[i] || '').replace(/;\s*/g, ' / ')}</td>
@@ -446,48 +527,33 @@
 				// formato: "Fechas — Encargados"
 				const parts = r.split(/\s+—\s+|\s+-\s+|\s+\|\s+/);
 				const fechas = parts[0] || '';
-				const encargados = parts.slice(1).join(' ') || '';
+				let encargados = parts.slice(1).join(' ') || '';
+				// Mostrar nombres saneados pero completos (incluye primer apellido)
+				encargados = sanitizePeopleString(encargados);
 				const tr = document.createElement('tr');
 				tr.innerHTML = `<td class="fecha">${fechas}</td><td class="enc">${encargados}</td>`;
 				t.appendChild(tr);
 			}
 		}
 
-		function fillCerrar(cerrarMie, cerrarSab) {
-			// Obtener Mes/Año actual
-			const mesSel = document.getElementById('mesSelect').value; // Ej: "Diciembre 2025"
-			const [mesNombre, anioStr] = mesSel.split(' ');
-			const anio = parseInt(anioStr, 10);
-			const mesesFull = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
-			const mesesAbbr = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
-			const dias = ['Dom.','Lun.','Mar.','Mié.','Jue.','Vie.','Sáb.'];
-			const currentMonth = Math.max(0, mesesFull.indexOf(mesNombre));
-			const currentYear = anio;
-			// Construir todas las fechas del mes
-			const fechas = [];
-			for (let d = 1; d <= 31; d++) {
-				const date = new Date(currentYear, currentMonth, d);
-				if (date.getMonth() !== currentMonth) break;
-				const dia = dias[date.getDay()];
-				const label = `${dia} ${String(d).padStart(2,'0')} ${mesesAbbr[currentMonth]}`;
-				fechas.push({dia, label});
-			}
-
-			const nombresJue = splitLines(cerrarMie);
-			const nombresDom = splitLines(cerrarSab);
-			// Filtrar fechas para Jueves y Domingo
-			const jueves = fechas.filter(f => f.dia === 'Jue.');
-			const domingo = fechas.filter(f => f.dia === 'Dom.');
-			// Combinar fecha con pareja por índice
-			const outJue = jueves.map((f, i) => {
-				const nom = nombresJue[i] || '';
-				return nom ? `${f.label} — ${nom}` : `${f.label}`;
-			}).join('<br/>');
-			const outDom = domingo.map((f, i) => {
-				const nom = nombresDom[i] || '';
-				return nom ? `${f.label} — ${nom}` : `${f.label}`;
-			}).join('<br/>');
-
+		function fillCerrar(fechas, cerrarMie, cerrarSab) {
+			// Si en Jueves se ingresó fecha personalizada ("Fecha — Responsable"), usar esas fechas en la columna Fecha
+			const cierresJue = splitLines(cerrarMie);
+			const fechasDesdeJue = cierresJue
+				.map(line => (line.split(/\s+—\s+/)[0] || '').trim())
+				.filter(Boolean);
+			const outFechas = (fechasDesdeJue.length ? fechasDesdeJue : splitLines(fechas)).join('<br/>');
+			// Jueves: mostrar solo los nombres (sin fechas ni guiones)
+			const outJue = cierresJue
+				.map(line => {
+					const parts = line.split(/\s+—\s+/);
+					const nombres = (parts.length > 1 ? parts[parts.length-1] : line).trim();
+					return sanitizePeopleString(nombres);
+				})
+				.join('<br/>');
+			// Domingo: solo responsables
+			const outDom = splitLines(cerrarSab).map(sanitizePeopleString).join('<br/>');
+			document.getElementById('cerrarFechasOut').innerHTML = outFechas;
 			document.getElementById('cerrarMieOut').innerHTML = outJue;
 			document.getElementById('cerrarSabOut').innerHTML = outDom;
 		}
@@ -501,6 +567,9 @@
 				let [fecha, suministros, encargado] = [parts[0]||'', parts[1]||'', parts[2]||''];
 				// Quitar una 'x' final si aparece en el grupo al imprimir
 				encargado = (encargado || '').replace(/\s*x$/i, '');
+				// Sanitizar nombres en "Suministra" y "Grupo" para eliminar segundos apellidos/iniciales
+				suministros = sanitizePersonName(suministros);
+				encargado = sanitizePersonName(encargado);
 				const tr = document.createElement('tr');
 				tr.innerHTML = `
 					<td>${fecha}</td>
@@ -514,6 +583,7 @@
 		function generar() {
 			const mesSelect = document.getElementById('mesSelect');
 			const mes = (mesSelect && mesSelect.value) || 'Diciembre 2025';
+			const congregacion = document.getElementById('congregacion').value || '';
 			const frase = document.getElementById('frase').value || '';
 			const tituloSc = document.getElementById('titulo_sc').value || '';
 			const obsSc = document.getElementById('obs_sc').value || '';
@@ -533,6 +603,7 @@
 			const tareasAseo = tareasAseoList || (document.getElementById('aseo_tareas')?.value || '');
 
 			document.getElementById('mesOut').textContent = mes;
+			document.getElementById('congregacionOut').textContent = congregacion;
 			document.getElementById('fraseOut').textContent = frase;
 			document.getElementById('tituloScOut').textContent = tituloSc || 'Asamblea con el superintendente de circuito';
 			document.getElementById('obsScOut').textContent = obsSc;
@@ -542,7 +613,7 @@
 
 			fillGeneral(fechas, acomodacion, microfonos, zoomVideo, sonido, plataforma);
 			fillAbrir(abrir);
-			fillCerrar(cerrarMie, cerrarSab);
+			fillCerrar(fechas, cerrarMie, cerrarSab);
 			fillAseo(tareasAseo);
 		}
 
@@ -948,7 +1019,7 @@
 			const fechaSel = document.getElementById('abrirFechaSelect').value;
 			const fechaCustom = document.getElementById('abrirFechaCustom').value.trim();
 			const fecha = fechaCustom || fechaSel;
-			const enc = document.getElementById('abrirEncSelect').value;
+			const enc = sanitizePeopleString(document.getElementById('abrirEncSelect').value || '');
 			if (!fecha || !enc) return;
 			addListItem('abrirList', `${fecha} — ${enc}`);
 			document.getElementById('abrirFechaCustom').value = '';
@@ -1035,7 +1106,7 @@
 		populateCerrarSabSelect();
 		document.getElementById('addCerrarSab').addEventListener('click', () => {
 			const sel = document.getElementById('cerrarSabSelect');
-			const val = sel.value;
+			const val = sanitizePeopleString(sel.value || '');
 			if (!val) return;
 			addListItem('cerrarSabList', val);
 		});
@@ -1044,16 +1115,19 @@
 		});
 		document.getElementById('addCerrarMie').addEventListener('click', () => {
 			const sel = document.getElementById('cerrarMieSelect');
-			const val = sel.value;
-			if (!val) return;
-			addListItem('cerrarMieList', val);
+			const val = sanitizePeopleString(sel.value || '');
+			const fechaCustom = (document.getElementById('cerrarMieFechaCustom').value || '').trim();
+			if (!val && !fechaCustom) return;
+			const itemText = fechaCustom ? `${fechaCustom} — ${val}` : val;
+			addListItem('cerrarMieList', itemText);
+			document.getElementById('cerrarMieFechaCustom').value = '';
 		});
 		document.getElementById('clearCerrarMie').addEventListener('click', () => {
 			document.getElementById('cerrarMieList').innerHTML = '';
 		});
 		document.getElementById('addPlataforma').addEventListener('click', () => {
 			const sel = document.getElementById('plataformaSelect');
-			const val = sel.value;
+			const val = sanitizePersonName(sel.value || '');
 			if (!val) return;
 			addListItem('plataformaList', val);
 		});
@@ -1062,7 +1136,7 @@
 		});
 		document.getElementById('addSonido').addEventListener('click', () => {
 			const sel = document.getElementById('sonidoSelect');
-			const val = sel.value;
+			const val = sanitizePersonName(sel.value || '');
 			if (!val) return;
 			addListItem('sonidoList', val);
 		});
@@ -1071,7 +1145,7 @@
 		});
 		document.getElementById('addAcomodacion').addEventListener('click', () => {
 			const sel = document.getElementById('acomodacionSelect');
-			const val = sel.value;
+			const val = sanitizePersonName(sel.value || '');
 			if (!val) return;
 			// Si el último elemento tiene un solo nombre, permitir concatenar con "; Nombre"
 			addPairingOrNew('acomodacionList', val);
@@ -1082,7 +1156,7 @@
 		// ZOOM/Vídeo: añadir y limpiar (rol único)
 		document.getElementById('addZoomVideo').addEventListener('click', () => {
 			const sel = document.getElementById('zoomVideoSelect');
-			const val = sel.value;
+			const val = sanitizePersonName(sel.value || '');
 			if (!val) return;
 			addListItem('zoomVideoList', val);
 		});
@@ -1092,7 +1166,7 @@
 		// Micrófonos: añadir y limpiar
 		document.getElementById('addMicrofonos').addEventListener('click', () => {
 			const sel = document.getElementById('microfonosSelect');
-			const val = sel.value;
+			const val = sanitizePersonName(sel.value || '');
 			if (!val) return;
 			addPairingOrNew('microfonosList', val);
 		});
@@ -1133,8 +1207,135 @@
 		document.getElementById('clearFechas').addEventListener('click', () => {
 			document.getElementById('fechasList').innerHTML = '';
 		});
-		// Inicial: muestra ejemplo para visualizar formato
+		// Inicial: muestra ejemplo para visualizar formato y sanitiza listas
 		ejemplo();
+		sanitizeAllLists();
 	</script>
+		<script>
+		// Persistencia automática del estado usando localStorage
+		(function(){
+			const STORAGE_KEY = 'privilegios_estado_v1';
+
+			function collectState() {
+				const state = {};
+				// Campos simples
+				['frase','titulo_sc','obs_sc','titulo_aseo','obs_aseo','abrirFechaCustom','congregacion'].forEach(id => {
+					const el = document.getElementById(id);
+					if (el) state[id] = el.value || '';
+				});
+				// Checkbox toggle SC
+				const toggle = document.getElementById('toggle_sc');
+				if (toggle) state['toggle_sc'] = !!toggle.checked;
+				// Mes seleccionado
+				const mesSel = document.getElementById('mesSelect');
+				if (mesSel) state['mesSelectIndex'] = mesSel.selectedIndex;
+				// Filtros
+				['filtroDiaFechas','filtroDiaAbrir','filtroDiaAseo'].forEach(id => {
+					const el = document.getElementById(id);
+					if (el) state[id] = el.value;
+				});
+				// Listas dinámicas (guardar como texto por línea)
+				function listToText(id){
+					return Array.from(document.querySelectorAll('#'+id+' li')).map(li => li.dataset.value || li.textContent).join('\n');
+				}
+				['fechasList','acomodacionList','microfonosList','zoomVideoList','sonidoList','plataformaList','abrirList','cerrarMieList','cerrarSabList','aseoList']
+					.forEach(id => { state[id] = listToText(id); });
+				return state;
+			}
+
+			function applyState(state) {
+				if (!state) return;
+				// Mes y filtros
+				const mesSel = document.getElementById('mesSelect');
+				if (mesSel && typeof state.mesSelectIndex === 'number') {
+					mesSel.selectedIndex = Math.max(0, Math.min(mesSel.options.length-1, state.mesSelectIndex));
+					mesSel.dispatchEvent(new Event('change'));
+				}
+				['filtroDiaFechas','filtroDiaAbrir','filtroDiaAseo'].forEach(id => {
+					const el = document.getElementById(id);
+					if (el && state[id]) {
+						el.value = state[id];
+						el.dispatchEvent(new Event('change'));
+					}
+				});
+				// Campos simples
+				['frase','titulo_sc','obs_sc','titulo_aseo','obs_aseo','abrirFechaCustom','congregacion'].forEach(id => {
+					const el = document.getElementById(id);
+					if (el && state[id] !== undefined) el.value = state[id];
+				});
+				const toggle = document.getElementById('toggle_sc');
+				if (toggle && state['toggle_sc'] !== undefined) toggle.checked = !!state['toggle_sc'];
+
+				// Reconstruir listas
+				function setListFromText(id, text){
+					const list = document.getElementById(id);
+					if (!list) return;
+					list.innerHTML = '';
+					(text || '').split(/\n/).map(l => l.trim()).filter(Boolean).forEach(item => {
+						const li = document.createElement('li');
+						li.className = 'list-item';
+						li.dataset.value = item;
+						const span = document.createElement('span');
+						span.className = 'item-text';
+						span.textContent = item;
+						const btn = document.createElement('button');
+						btn.type = 'button';
+						btn.className = 'item-remove';
+						btn.title = 'Eliminar';
+						btn.textContent = 'x';
+						btn.addEventListener('click', () => li.remove());
+						li.appendChild(span);
+						li.appendChild(btn);
+						list.appendChild(li);
+					});
+				}
+				['fechasList','acomodacionList','microfonosList','zoomVideoList','sonidoList','plataformaList','abrirList','cerrarMieList','cerrarSabList','aseoList']
+					.forEach(id => setListFromText(id, state[id] || ''));
+
+				// Sanitizar listas restauradas para mantener "Nombre Apellido" consistente
+				try { sanitizeAllLists(); } catch(e) {}
+				try { sanitizeAbrirList(); } catch(e) {}
+				// Regenerar la salida visual
+				try { generar(); } catch(e) {}
+			}
+
+			function save() {
+				try { localStorage.setItem(STORAGE_KEY, JSON.stringify(collectState())); }
+				catch(e) { console.warn('No se pudo guardar estado', e); }
+			}
+			function restore() {
+				try {
+					const raw = localStorage.getItem(STORAGE_KEY);
+					if (!raw) return;
+					const state = JSON.parse(raw);
+					applyState(state);
+				} catch(e) { console.warn('No se pudo restaurar estado', e); }
+			}
+
+			// Guardar en cambios relevantes
+			function bindAutoSave(){
+				const ids = ['frase','titulo_sc','obs_sc','toggle_sc','mesSelect','filtroDiaFechas','filtroDiaAbrir','filtroDiaAseo','titulo_aseo','obs_aseo','abrirFechaCustom','congregacion'];
+				ids.forEach(id => {
+					const el = document.getElementById(id);
+					if (!el) return;
+					const evt = (el.tagName === 'SELECT' || el.type === 'checkbox') ? 'change' : 'input';
+					el.addEventListener(evt, () => save());
+				});
+				// Botones que modifican listas
+				['addFecha','clearFechas','addAcomodacion','clearAcomodacion','addMicrofonos','clearMicrofonos','addZoomVideo','clearZoomVideo','addSonido','clearSonido','addPlataforma','clearPlataforma','addAbrir','clearAbrir','addCerrarMie','clearCerrarMie','addCerrarSab','clearCerrarSab','addAseo','clearAseo']
+					.forEach(id => {
+						const btn = document.getElementById(id);
+						if (btn) btn.addEventListener('click', () => setTimeout(save, 50));
+					});
+			}
+
+			document.addEventListener('DOMContentLoaded', function(){
+				restore();
+				bindAutoSave();
+				// Guardar al cerrar
+				window.addEventListener('beforeunload', save);
+			});
+		})();
+		</script>
 </body>
 </html>
