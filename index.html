@@ -11,6 +11,8 @@
 			--primary: #1c5fa1; /* banda superior oscura */
 			--primary-2: #2c7fc8; /* banda de mes */
 			--accent: #58a3e1; /* azul medio para secciones */
+			--highlight: #c45f0b; /* color para destacar etiquetas clave */
+			--highlight-bg: #fff3e6; /* fondo suave para etiquetas destacadas */
 			--title-light: #eaf3fb; /* texto claro en bandas */
 			--text: #0b2a45;
 			--muted: #4f6b85;
@@ -35,6 +37,15 @@
 		form.grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
 		.field { display: flex; flex-direction: column; gap: 6px; }
 		.field label { font-size: 12px; color: var(--muted); }
+		/* Resaltado para etiquetas clave */
+		.field label.highlight {
+			color: var(--highlight);
+			background: var(--highlight-bg);
+			font-weight: 700;
+			display: inline-block;
+			padding: 3px 8px;
+			border-radius: 8px;
+		}
 		.field input, .field select, .field textarea { border: 1px solid var(--border); border-radius: 8px; padding: 8px 10px; font-size: 14px; }
 		.subgrid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
 		.subgrid-4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
@@ -78,9 +89,13 @@
 		.abrir-table th.fecha, .abrir-table td.fecha { width: 22%; }
 		.abrir-table th.enc, .abrir-table td.enc { width: 78%; }
 		.abrir-table tbody td.enc { font-size: 15px; text-align: center; }
+		/* Aumentar ligeramente tamaño de fuente de la columna de fecha */
+		.abrir-table th.fecha, .abrir-table td.fecha { font-size: 15px; }
 
 		/* Cerrar Salón: centrar nombres */
 		#cerrarMieOut, #cerrarSabOut { text-align: center; font-size: 15px; }
+		/* Aumentar tamaño de números/fechas en la primera columna de la tabla de cerrar */
+		#tablaCerrar td:first-child, #tablaCerrar th:first-child { font-size: 15px; }
 
 		/* Recuadro fijo de áreas */
 		.info-box { margin-top: 10px; background: #cfe0f3; color: #0b2a45; padding: 14px; text-align: center; border-radius: 8px; font-weight: 700; }
@@ -147,7 +162,7 @@
 						</div>
 
 						<div class="field">
-							<label>Programa general - Fechas</label>
+							<label class="highlight">Programa general - Fechas</label>
 							<div class="actions" style="padding:0; gap:6px; flex-wrap: wrap;">
 								<button type="button" class="ghost" id="prevMes">◀ Mes anterior</button>
 								<select id="fechasSelect"></select>
@@ -164,7 +179,7 @@
 							<ul id="fechasList" style="margin:8px 0 0; padding-left:18px; color: var(--muted);"></ul>
 						</div>
 						<div class="field">
-							<label>Programa general - Acomodación</label>
+							<label class="highlight">Programa general - Acomodación</label>
 							<div class="actions" style="padding:0; gap:6px; flex-wrap: wrap;">
 								<select id="acomodacionSelect"></select>
 								<button type="button" class="ghost" id="addAcomodacion">Añadir</button>
@@ -175,7 +190,7 @@
 						</div>
 
 						<div class="field">
-							<label>Programa general - Micrófonos</label>
+							<label class="highlight">Programa general - Micrófonos</label>
 							<div class="actions" style="padding:0; gap:6px; flex-wrap: wrap;">
 								<select id="microfonosSelect"></select>
 								<button type="button" class="ghost" id="addMicrofonos">Añadir</button>
@@ -186,7 +201,7 @@
 						</div>
 
 						<div class="field">
-							<label>Programa general - Acomodación ZOOM y Vídeo</label>
+							<label class="highlight">Programa general - Acomodación ZOOM y Vídeo</label>
 							<div class="actions" style="padding:0; gap:6px; flex-wrap: wrap;">
 								<select id="zoomVideoSelect"></select>
 								<button type="button" class="ghost" id="addZoomVideo">Añadir</button>
@@ -197,7 +212,7 @@
 						</div>
 
 						<div class="field">
-							<label>Programa general - Sonido</label>
+							<label class="highlight">Programa general - Sonido</label>
 							<div class="actions" style="padding:0; gap:6px; flex-wrap: wrap;">
 								<select id="sonidoSelect"></select>
 								<button type="button" class="ghost" id="addSonido">Añadir</button>
@@ -207,7 +222,7 @@
 							<ul id="sonidoList" style="margin:8px 0 0; padding-left:18px; color: var(--muted);"></ul>
 						</div>
 						<div class="field">
-							<label>Programa general - Plataforma</label>
+							<label class="highlight">Programa general - Plataforma</label>
 							<div class="actions" style="padding:0; gap:6px; flex-wrap: wrap;">
 								<select id="plataformaSelect"></select>
 								<button type="button" class="ghost" id="addPlataforma">Añadir</button>
@@ -218,7 +233,7 @@
 						</div>
 
 						<div class="field" style="grid-column: 1 / -1;">
-							<label>Abrir Salón - Fechas y encargados</label>
+							<label class="highlight">Abrir Salón - Fechas y encargados</label>
 							<div class="actions" style="padding:0; gap:6px; flex-wrap: wrap;">
 								<select id="abrirFechaSelect"></select>
 								<select id="filtroDiaAbrir" title="Filtrar por día">
@@ -235,7 +250,7 @@
 							<ul id="abrirList" style="margin:8px 0 0; padding-left:18px; color: var(--muted);"></ul>
 						</div>
 						<div class="field">
-							<label>Cerrar Salón - Jueves</label>
+							<label class="highlight">Cerrar Salón - Jueves</label>
 							<div class="actions" style="padding:0; gap:6px; flex-wrap: wrap;">
 								<select id="cerrarMieSelect"></select>
 								<input id="cerrarMieFechaCustom" type="text" placeholder="Fecha personalizada (opcional)" style="flex:1;" />
@@ -246,7 +261,7 @@
 							<ul id="cerrarMieList" style="margin:8px 0 0; padding-left:18px; color: var(--muted);"></ul>
 						</div>
 						<div class="field">
-							<label>Cerrar Salón - Domingo</label>
+							<label class="highlight">Cerrar Salón - Domingo</label>
 							<div class="actions" style="padding:0; gap:6px; flex-wrap: wrap;">
 								<select id="cerrarSabSelect"></select>
 								<button type="button" class="ghost" id="addCerrarSab">Añadir</button>
@@ -266,7 +281,7 @@
 						</div>
 
 						<div class="field" style="grid-column: 1 / -1;">
-							<label>Aseo - Fechas, Suministra y Grupo</label>
+							<label class="highlight">Aseo - Fechas, Suministra y Grupo</label>
 							<div class="actions" style="padding:0; gap:6px; flex-wrap: wrap;">
 								<select id="aseoFechaSelect"></select>
 								<select id="filtroDiaAseo" title="Filtrar por día">
