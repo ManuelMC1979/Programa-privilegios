@@ -70,15 +70,15 @@
 		.program table { width: 100%; border-collapse: collapse; table-layout: fixed; }
 		.program th { background: #dbe9f6; color: #113a5d; font-weight: 700; font-size: 13px; border: 1px solid var(--border); padding: 6px 8px; }
 		.program td { border: 1px solid var(--border); padding: 6px 8px; font-size: 13px; text-align: center; }
-		/* Evitar salto de línea en Micrófonos y recortar con elipsis si no cabe */
-		.program td.mic { white-space: nowrap !important; overflow: hidden; text-overflow: ellipsis; }
+		
 		/* Anchos aproximados según el documento */
-		.col-fecha { width: 6%; }
-		.col-acom { width: 20%; }
+		.col-fecha { width: 10%; }
+		.col-hall { width: 8%; }
+		.col-acom { width: 12%; }
 		/* Reducir ancho de Sonido y Plataforma para dar más espacio a otras columnas */
 		.program thead th:nth-child(5), .program tbody td:nth-child(5) { width: 12%; }
 		.program thead th:nth-child(6), .program tbody td:nth-child(6) { width: 12%; }
-		.col-rol { width: 16%; }
+		.col-rol { width: 10%; }
 		.program .section h3 { margin: 0 0 8px; color: var(--primary); font-size: 15px; text-align: center; }
 		.subsection-title { text-align: center; }
 
@@ -98,11 +98,29 @@
 		#tablaCerrar td:first-child, #tablaCerrar th:first-child { font-size: 15px; }
 
 		/* Recuadro fijo de áreas */
-		.info-box { margin-top: 10px; background: #cfe0f3; color: #0b2a45; padding: 14px; text-align: center; border-radius: 8px; font-weight: 700; }
+		   .info-box {
+			   margin-top: 10px;
+			   background: #90c2f0;
+			   color: #0b2a45;
+			   padding: 18px;
+			   text-align: center;
+			   border-radius: 12px;
+			   font-weight: 900;
+			   font-size: 1.18em;
+			   border: 2.5px solid #2c7fc8;
+			   box-shadow: 0 2px 12px rgba(44,127,200,0.10);
+		   }
 
 		/* Impresión */
 		@page { size: A4; margin: 14mm; }
 		@media print {
+			.program thead th:nth-child(1), .program tbody td:nth-child(1) { width: 16% !important; }
+			.program thead th:nth-child(2), .program tbody td:nth-child(2) { width: 12% !important; }
+			.program thead th:nth-child(3), .program tbody td:nth-child(3) { width: 16% !important; }
+			.program thead th:nth-child(4), .program tbody td:nth-child(4) { width: 18% !important; }
+			.program thead th:nth-child(5), .program tbody td:nth-child(5) { width: 12% !important; }
+			.program thead th:nth-child(6), .program tbody td:nth-child(6) { width: 13% !important; }
+			.program thead th:nth-child(7), .program tbody td:nth-child(7) { width: 13% !important; }
 			.no-print { display: none !important; }
 			body { background: #fff; }
 			.container { max-width: 100%; margin: 0; padding: 0; }
@@ -171,12 +189,25 @@
 									<option value="jueves">Solo Jueves</option>
 									<option value="domingo">Solo Domingo</option>
 								</select>
+								<input type="text" id="fechasCustom" placeholder="Fechas personalizadas (separe con ; )" style="min-width:160px;" />
 								<button type="button" class="ghost" id="nextMes">Mes siguiente ▶</button>
 								<button type="button" class="ghost" id="addFecha">Añadir</button>
 								<button type="button" class="ghost" id="clearFechas">Limpiar</button>
 							</div>
-							<small style="color: var(--muted)">Use el desplegable para agregar fechas al programa.</small>
+							<small style="color: var(--muted)">Use el desplegable para agregar fechas al programa. Se permiten parejas con “;”.</small>
 							<ul id="fechasList" style="margin:8px 0 0; padding-left:18px; color: var(--muted);"></ul>
+						</div>
+						<div class="field">
+						<label class="highlight">Programa general - Acomodación Hall (Entrada)</label>
+						<div class="actions" style="padding:0; gap:6px; flex-wrap: wrap;">
+							<select id="hallFechaSelect"></select>
+							<input id="hallFechaCustom" type="text" placeholder="Fecha personalizada (opcional)" style="flex:1;" />
+							<select id="hallNombreSelect"></select>
+							<button type="button" class="ghost" id="addHall">Añadir</button>
+							<button type="button" class="ghost" id="clearHall">Limpiar</button>
+						</div>
+						<small style="color: var(--muted)">Seleccione la fecha y el nombre, o escriba una fecha personalizada, y pulse Añadir.</small>
+						<ul id="hallList" style="margin:8px 0 0; padding-left:18px; color: var(--muted);"></ul>
 						</div>
 						<div class="field">
 							<label class="highlight">Programa general - Acomodación</label>
@@ -322,6 +353,7 @@
 						<thead>
 							<tr>
 								<th class="col-fecha">Fecha</th>
+								<th class="col-hall">Acomodación Hall (Entrada)</th> <!-- NUEVA COLUMNA -->
 								<th class="col-acom">Acomodación</th>
 								<th class="col-rol">Micrófonos</th>
 								<th class="col-rol">Acomodación ZOOM y Vídeo</th>
@@ -343,8 +375,8 @@
 					<div style="color: var(--muted); font-size: 13px; font-style: italic; margin: 4px 0 8px;">“Había cuatro porteros principales en los cargos de confianza.” (1 Cro. 9:26)</div>
 					<div class="subsection-title">Encargados de Abrir el Salón</div>
 					<div style="color: var(--muted); font-size: 12px; margin: 2px 0 8px;">
-						Nota: Principalmente ellos son los responsables, pero esto no quiere decir que alguién que
-						llaves no pueda abrir primero, más bien se agradece el trabajo en equipo. (Eclesiastés 4:9,10 ;7:16)
+					Nota: Principalmente, ellos son los responsables; sin embargo, esto no quiere decir que alguien que tenga llaves no pueda abrir primero. Más bien, se agradece el trabajo en equipo.<br/>
+					(Eclesiastés 4:9, 10; 7:16)
 					</div>
 					<table class="abrir-table">
 						<thead>
@@ -399,132 +431,186 @@
 	</div>
 
 	<script>
-		function addListItem(listId, text) {
-			const list = document.getElementById(listId);
-			if (!list) return null;
-			// Sanitizar texto antes de insertar (eliminar inicial del segundo apellido y segundo apellido)
-			const sanitizedText = sanitizePeopleString(text);
-			const li = document.createElement('li');
-			li.className = 'list-item';
-			li.dataset.value = sanitizedText;
-			const span = document.createElement('span');
-			span.className = 'item-text';
-			span.textContent = sanitizedText;
-			const btn = document.createElement('button');
-			btn.type = 'button';
-			btn.className = 'item-remove';
-			btn.title = 'Eliminar';
-			btn.textContent = 'x';
-			btn.addEventListener('click', () => li.remove());
-			li.appendChild(span);
-			li.appendChild(btn);
-			list.appendChild(li);
-			return li;
-		}
+           function addListItem(listId, text) {
+               const list = document.getElementById(listId);
+               if (!list) return null;
+               // Solo para acomodacionList, mostrar inicial del primer apellido
+               const onlyInitial = listId === 'acomodacionList';
+               const sanitizedText = sanitizePeopleString(text, onlyInitial);
+               const li = document.createElement('li');
+               li.className = 'list-item';
+               li.dataset.value = sanitizedText;
+               const span = document.createElement('span');
+               span.className = 'item-text';
+               span.textContent = sanitizedText;
+               const btn = document.createElement('button');
+               btn.type = 'button';
+               btn.className = 'item-remove';
+               btn.title = 'Eliminar';
+               btn.textContent = 'x';
+               btn.addEventListener('click', () => li.remove());
+               li.appendChild(span);
+               li.appendChild(btn);
+               list.appendChild(li);
+               return li;
+           }
 
-		// Sanitizador: elimina segundos apellidos o iniciales finales en nombres
-		function sanitizePersonName(name) {
-			// Quita sufijo "S.I." y iniciales sueltas al final, pero conserva nombre y apellidos completos.
-			// Ejemplos a limpiar: "Juan Pérez R.", "Yasser Villegas De V.", "Juan Ibáñez L.(S.I.)"
-			let n = (name || '')
-				.replace(/\(\s*S\.I\.\s*\)$/iu, '')
-				.replace(/\s+S\.I\.?$/iu, '')
-				.replace(/\s+(?:de|del|la|las|los|y)\s*[A-ZÁÉÍÓÚÑ]\.\s*$/iu, '')
-				.replace(/\s+[A-ZÁÉÍÓÚÑ]\.\s*$/iu, '')
-				.trim();
-			// No recortar tokens: mantener nombre y apellido(s) tal como ingresado
-			return n;
-		}
+        // Sanitizador: elimina segundos apellidos o iniciales finales en nombres
+        function sanitizePersonName(name) {
+            // Quita sufijo "S.I." y iniciales sueltas al final, pero conserva nombre y apellidos completos.
+            // Ejemplos a limpiar: "Juan Pérez R.", "Yasser Villegas De V.", "Juan Ibáñez L.(S.I.)"
+            let n = (name || '')
+                .replace(/\(\s*S\.I\.\s*\)$/iu, '')
+                .replace(/\s+S\.I\.?$/iu, '')
+                .replace(/\s+(?:de|del|la|las|los|y)\s*[A-ZÁÉÍÓÚÑ]\.\s*$/iu, '')
+                .replace(/\s+[A-ZÁÉÍÓÚÑ]\.\s*$/iu, '')
+                .trim();
+            // No recortar tokens: mantener nombre y apellido(s) tal como ingresado
+            return n;
+        }
 
-		function sanitizePeopleString(text) {
-			// Preserva ';' como separador de parejas; dentro de cada parte, normaliza nombres separados por '-' o ','
-			const pairs = (text || '').split(/\s*;\s*/);
-			const normalized = pairs.map(pair =>
-				pair
-					.split(/\s*-\s*|\s*,\s*/)
-					.map(p => sanitizePersonName(p))
-					.join(' - ')
-			);
-			return normalized.join('; ');
-		}
+           function sanitizePeopleString(text, onlyInitialForAcomodacion = false) {
+               // Preserva ';' como separador de parejas; dentro de cada parte, normaliza nombres separados por '-' o ','
+			   const pairs = (text || '').split(/\s*;\s*/);
+			   const normalized = pairs.map(pair =>
+				   pair
+					   .split(/\s*-\s*|\s*,\s*/)
+					   .map(p => {
+						   if (onlyInitialForAcomodacion) {
+							   // Si solo hay un nombre, agregar " X." como inicial ficticia
+							   let n = sanitizePersonName(p);
+							   const parts = n.split(' ');
+							   if (parts.length === 1) {
+								   // Si solo se ingresa "Carlos", mostrar "Carlos M."
+								   if (parts[0].toLowerCase() === 'carlos') {
+									   return 'Carlos M.';
+								   }
+								   if (parts[0].toLowerCase() === 'fernando') {
+									   return 'Fernando F.';
+								   }
+								   if (parts[0].toLowerCase() === 'raúl' || parts[0].toLowerCase() === 'raul') {
+									   return 'Raúl G.';
+								   }
+								   if (parts[0].toLowerCase() === 'pedro') {
+									   return 'Pedro D.';
+								   }
+								   if (parts[0].toLowerCase() === 'miguel') {
+									   return 'Miguel G.';
+								   }
+								   return parts[0] + ' X.';
+							   }
+							   return formatNameInitial(n);
+						   } else {
+							   return sanitizePersonName(p);
+						   }
+					   })
+					   .join(' - ')
+			   );
+			   return normalized.join('; ');
+           }
 
-		function sanitizeExistingList(listId){
-			const items = Array.from(document.querySelectorAll('#'+listId+' li'));
-			items.forEach(li => {
-				const original = li.dataset.value || li.textContent || '';
-				const clean = sanitizePeopleString(original);
-				li.dataset.value = clean;
-				const span = li.querySelector('.item-text');
-				if (span) span.textContent = clean;
-			});
-		}
+           // Formatea: "Nombre Apellido" => "Nombre A."
+           function formatNameInitial(name) {
+               let n = sanitizePersonName(name);
+               const parts = n.split(' ');
+               if (parts.length >= 2) {
+                   return parts[0] + ' ' + parts[1][0].toUpperCase() + '.';
+               }
+               return n;
+           }
 
-		function sanitizeAllLists(){
-			// Sanitizar solo listas de nombres puros.
-			['acomodacionList','microfonosList','zoomVideoList','sonidoList','plataformaList','cerrarMieList','cerrarSabList']
-				.forEach(sanitizeExistingList);
-		}
+        function sanitizeExistingList(listId){
+            const items = Array.from(document.querySelectorAll('#'+listId+' li'));
+            items.forEach(li => {
+                const original = li.dataset.value || li.textContent || '';
+                const clean = sanitizePeopleString(original);
+                li.dataset.value = clean;
+                const span = li.querySelector('.item-text');
+                if (span) span.textContent = clean;
+            });
+        }
 
-		// Sanitizar específicamente Abrir: conservar fecha y limpiar solo nombres
-		function sanitizeAbrirList(){
-			const items = Array.from(document.querySelectorAll('#abrirList li'));
-			items.forEach(li => {
-				const original = li.dataset.value || li.textContent || '';
-				const parts = original.split(/\s+—\s+/);
-				if (parts.length >= 2){
-					const fecha = parts[0].trim();
-					const nombres = sanitizePeopleString(parts.slice(1).join(' — '));
-					const combined = `${fecha} — ${nombres}`;
-					li.dataset.value = combined;
-					const span = li.querySelector('.item-text');
-					if (span) span.textContent = combined;
-				}
-			});
-		}
+        function sanitizeAllLists(){
+            // Sanitizar solo listas de nombres puros.
+            ['acomodacionList','microfonosList','zoomVideoList','sonidoList','plataformaList','cerrarMieList','cerrarSabList']
+                .forEach(sanitizeExistingList);
+        }
 
-		function addPairingOrNew(listId, val) {
-			const list = document.getElementById(listId);
-			const last = list?.lastElementChild;
-			if (last) {
-				const span = last.querySelector('.item-text');
-				const current = (last.dataset.value || span?.textContent || '').trim();
-				// Si ya hay una pareja en la última fila, no concatenar más
-				const alreadyPaired = /;|\s-\s/.test(current);
-				if (current && !alreadyPaired) {
-					const updated = sanitizePeopleString(`${current}; ${val}`);
-					last.dataset.value = updated;
-					if (span) span.textContent = updated;
-					return;
-				}
-			}
-			addListItem(listId, val);
-		}
+        // Sanitizar específicamente Abrir: conservar fecha y limpiar solo nombres
+        function sanitizeAbrirList(){
+            const items = Array.from(document.querySelectorAll('#abrirList li'));
+            items.forEach(li => {
+                const original = li.dataset.value || li.textContent || '';
+                const parts = original.split(/\s+—\s+/);
+                if (parts.length >= 2){
+                    const fecha = parts[0].trim();
+                    const nombres = sanitizePeopleString(parts.slice(1).join(' — '));
+                    const combined = `${fecha} — ${nombres}`;
+                    li.dataset.value = combined;
+                    const span = li.querySelector('.item-text');
+                    if (span) span.textContent = combined;
+                }
+            });
+        }
 
-		function getListValues(listId) {
-			return Array.from(document.querySelectorAll(`#${listId} li`)).map(li => li.dataset.value || li.textContent);
-		}
-		function splitLines(value) {
-			return value
-				.split(/\n/)
-				.map(l => l.trim())
-				.filter(Boolean);
-		}
+        function addPairingOrNew(listId, val) {
+            const list = document.getElementById(listId);
+            const last = list?.lastElementChild;
+            if (last) {
+                const span = last.querySelector('.item-text');
+                const current = (last.dataset.value || span?.textContent || '').trim();
+                // Si ya hay una pareja en la última fila, no concatenar más
+                const alreadyPaired = /;|\s-\s/.test(current);
+                if (current && !alreadyPaired) {
+                    const updated = sanitizePeopleString(`${current}; ${val}`);
+                    last.dataset.value = updated;
+                    if (span) span.textContent = updated;
+                    return;
+                }
+            }
+            addListItem(listId, val);
+        }
 
-		function fillGeneral(fechas, acomodacion, microfonos, zoomVideo, sonido, plataforma) {
+        function getListValues(listId) {
+            return Array.from(document.querySelectorAll(`#${listId} li`)).map(li => li.dataset.value || li.textContent);
+        }
+        function splitLines(value) {
+            return value
+                .split(/\n/)
+                .map(l => l.trim())
+                .filter(Boolean);
+        }
+
+		function fillGeneral(fechas, hall, acomodacion, microfonos, zoomVideo, sonido, plataforma) {
 			const t = document.getElementById('tablaGeneral');
 			t.innerHTML = '';
 			const f = splitLines(fechas);
-			const a = splitLines(acomodacion).map(sanitizePeopleString);
-			const m = splitLines(microfonos).map(sanitizePeopleString);
+			const h = splitLines(hall).map(function(nombre) {
+				// Si el nombre tiene al menos dos palabras, mostrar nombre y la inicial del apellido con punto
+				if (!nombre) return '';
+				const partes = nombre.trim().split(' ');
+				if (partes.length >= 2) {
+					return partes[0] + ' ' + partes[1][0].toUpperCase() + '.';
+				}
+				return nombre;
+			});
+			const a = splitLines(acomodacion).filter(Boolean).map(line => sanitizePeopleString(line, true));
+			const m = splitLines(microfonos).map(line => {
+				// Asegura que "Nombre X" se muestre como "Nombre X." (agrega punto si falta tras inicial, sin duplicar)
+				return sanitizePeopleString(line)
+					.replace(/([A-Za-zÁÉÍÓÚÑñ]) ([A-Z])(?!\.)/g, '$1 $2.') // Diego P -> Diego P.
+					.replace(/([A-Z])\.(?=\.)/g, '$1.'); // Evita duplicados
+			});
 			const z = splitLines(zoomVideo).map(sanitizePersonName);
 			const s = splitLines(sonido).map(sanitizePersonName);
 			const p = splitLines(plataforma).map(sanitizePersonName);
-			const max = Math.max(f.length, a.length, m.length, z.length, s.length, p.length);
+			const max = Math.max(f.length, h.length, a.length, m.length, z.length, s.length, p.length);
 			for (let i = 0; i < max; i++) {
 				const tr = document.createElement('tr');
 				tr.innerHTML = `
 					<td>${f[i] || ''}</td>
-					<td>${(a[i] || '').replace(/;\s*/g, ' / ')}</td>
+					<td>${h[i] || ''}</td>
+					<td>${(a[i] || '').replace(/;\s*/g, '   /   ')}</td>
 					<td class="mic">${(m[i] || '').replace(/;\s*/g, ' / ')}</td>
 					<td>${z[i] || ''}</td>
 					<td>${(s[i] || '').replace(/;\s*/g, ' / ')}</td>
@@ -562,12 +648,21 @@
 			const outJue = cierresJue
 				.map(line => {
 					const parts = line.split(/\s+—\s+/);
-					const nombres = (parts.length > 1 ? parts[parts.length-1] : line).trim();
+					let nombres = (parts.length > 1 ? parts[parts.length-1] : line).trim();
+					// Reemplazos específicos de iniciales por nombres completos
+					nombres = nombres
+						.replace(/Víctor R\.?\s*-\s*Richard P\.?/i, 'Víctor Ramos - Richard Parra')
+						.replace(/Claudio R\.?\s*-\s*Matthias L\.?/i, 'Claudio Ramos - Matthias López')
+						.replace(/Cristian S\.?\s*-\s*Miguel G\.?/i, 'Cristian Salazar - Miguel García')
+						.replace(/José C\.?\s*-\s*Pedro A\.?/i, 'José Cuevas - Pedro Abarza');
 					return sanitizePeopleString(nombres);
 				})
 				.join('<br/>');
 			// Domingo: solo responsables
-			const outDom = splitLines(cerrarSab).map(sanitizePeopleString).join('<br/>');
+			// Mostrar apellido completo en Domingo
+			const outDom = splitLines(cerrarSab)
+				.map(line => sanitizePeopleString(line, false))
+				.join('<br/>');
 			document.getElementById('cerrarFechasOut').innerHTML = outFechas;
 			document.getElementById('cerrarMieOut').innerHTML = outJue;
 			document.getElementById('cerrarSabOut').innerHTML = outDom;
@@ -626,7 +721,84 @@
 			document.getElementById('tituloAseoOut').textContent = tituloAseo || 'Programa de Aseo del Salón';
 			document.getElementById('obsAseoOut').textContent = obsAseo;
 
-			fillGeneral(fechas, acomodacion, microfonos, zoomVideo, sonido, plataforma);
+			const hall = getListValues('hallList').join('\n');
+			// Extraer solo el nombre para la tabla (por fecha)
+			const hallSoloNombres = hall.split('\n').map(line => (line.split(/\s+—\s+/)[1] || '')).join('\n');
+			fillGeneral(fechas, hallSoloNombres, acomodacion, microfonos, zoomVideo, sonido, plataforma);
+			// Eventos para Hall (Entrada) por fecha
+			function populateHallFechaSelect() {
+				const dias = ['Dom.','Lun.','Mar.','Mié.','Jue.','Vie.','Sáb.'];
+				const mesesAbbr = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
+				const mesSel = document.getElementById('mesSelect').value;
+				const [mesNombre, anioStr] = mesSel.split(' ');
+				const anio = parseInt(anioStr, 10);
+				const mesesFull = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+				const currentMonth = Math.max(0, mesesFull.indexOf(mesNombre));
+				const currentYear = anio;
+				const sel = document.getElementById('hallFechaSelect');
+				sel.innerHTML = '';
+				for (let d = 1; d <= 31; d++) {
+					const date = new Date(currentYear, currentMonth, d);
+					if (date.getMonth() !== currentMonth) break;
+					const dia = dias[date.getDay()];
+					const label = `${dia} ${String(d).padStart(2,'0')} ${mesesAbbr[currentMonth]}`;
+					const opt = document.createElement('option');
+					opt.value = label;
+					opt.textContent = label;
+					sel.appendChild(opt);
+				}
+			}
+			function populateHallNombreSelect() {
+				const nombres = [
+					'Ángelo Maldonado D.',
+					'Carlos Morales V.',
+					'David Ramírez A.',
+					'Fernando Flores B.',
+					'Fabian Martínez R.',
+					'Francisco Arévalo A.',
+					'Fernando Diaz E.',
+					'Javier Valdés R.',
+					'Juan Ibáñez L.',
+					'Manuel Monsalve C.',
+					'Miguel García F.',
+					'Pedro Abarza C.',
+					'Pedro Díaz E.',
+					'Raúl Geywitz G.',
+					'Salvador Quiroz G.',
+					'Sergio Palma L.',
+					'Víctor Martínez M.',
+					'Yasser Villegas De V.',
+					'Yeremie Contreras D.',
+					'ASAMBLEA REGIONAL',
+					'ASAMBLEA ESPECIAL'
+				];
+				const especiales = ['ASAMBLEA REGIONAL','ASAMBLEA ESPECIAL'];
+				const normales = nombres.filter(n => !especiales.includes(n)).sort((a,b) => a.localeCompare(b, 'es'));
+				const ordenFinal = [...normales, ...especiales];
+				const sel = document.getElementById('hallNombreSelect');
+				sel.innerHTML = '';
+				ordenFinal.forEach(n => {
+					const opt = document.createElement('option');
+					opt.value = n;
+					opt.textContent = n;
+					sel.appendChild(opt);
+				});
+			}
+			populateHallFechaSelect();
+			populateHallNombreSelect();
+			document.getElementById('mesSelect').addEventListener('change', populateHallFechaSelect);
+			document.getElementById('addHall').addEventListener('click', () => {
+				const fechaSel = document.getElementById('hallFechaSelect').value;
+				const fechaCustom = document.getElementById('hallFechaCustom').value.trim();
+				const fecha = fechaCustom || fechaSel;
+				const nombre = document.getElementById('hallNombreSelect').value;
+				if (!fecha || !nombre) return;
+				addListItem('hallList', `${fecha} — ${nombre}`);
+				document.getElementById('hallFechaCustom').value = '';
+			});
+			document.getElementById('clearHall').addEventListener('click', () => {
+				document.getElementById('hallList').innerHTML = '';
+			});
 			fillAbrir(abrir);
 			fillCerrar(fechas, cerrarMie, cerrarSab);
 			fillAseo(tareasAseo);
@@ -800,33 +972,33 @@
 		// Poblar select de Micrófonos con listado provisto
 		function populateMicrofonosSelect() {
 			const nombres = [
-				'David Ramírez A.',
-				'Diego Palma V.',
-				'Fabian Martínez R.',
-				'Fernando Diaz E.',
-				'Fernando Flores B.',
-				'Héctor Torres S.',
-				'José Monardes C.',
-				'Pedro Diaz E.',
-				'Salvador Quiroz G.',
-				'Samuel Parra S.',
-				'Sebastián Villegas S.',
-				'Thomás Diaz F.',
-				'Ángelo Maldonado D.',
-				'Carlos Morales V.',
-				'Francisco Arévalo A.',
-				'Javier Valdés R.',
-				'Juan Ibáñez L.',
-				'Manuel Monsalve C.',
-				'Miguel García F.',
-				'Pedro Abarza C.',
-				'Pedro Díaz E.',
-				'Raúl Geywitz G.',
-				'Sergio Palma L.',
-				'Víctor Martínez M.',
-				'Yasser Villegas De V.',
-				'Yeremie Contreras D.',
-				'Benjamin López B.',
+				'David R',
+				'Diego P',
+				'Fabian M',
+				'Fernando D',
+				'Fernando F',
+				'Héctor T',
+				'José M',
+				'Pedro D',
+				'Salvador Q',
+				'Samuel P',
+				'Sebastián V',
+				'Thomás D',
+				'Ángelo M',
+				'Carlos M',
+				'Francisco A',
+				'Javier V',
+				'Juan I',
+				'Manuel M',
+				'Miguel G',
+				'Pedro A',
+				'Pedro D',
+				'Raúl G',
+				'Sergio P',
+				'Víctor M',
+				'Yasser V',
+				'Yeremie C',
+				'Benjamin L',
 				'ASAMBLEA REGIONAL',
 				'ASAMBLEA ESPECIAL'
 			];
@@ -850,16 +1022,16 @@
 		// Poblar select de Acomodación ZOOM y Vídeo (rol único)
 		function populateZoomVideoSelect() {
 			const nombres = [
-				'Ángelo Maldonado D.',
-				'Javier Valdés R.',
-				'José Monardes C.',
-				'Manuel Monsalve C.',
-				'Mathías López B.',
-				'Fernando Flores B.',
-				'Sebastián Villegas S.',
-				'Yasser Villegas De V.',
-				'Yeremie Contreras D.',
-				'David Ramírez A.',
+				'Ángelo Maldonado',
+				'Javier Valdés',
+				'José Monardes',
+				'Manuel Monsalve',
+				'Mathías López',
+				'Fernando Flores',
+				'Sebastián Villegas',
+				'Yasser Villegas',
+				'Yeremie Contreras',
+				'David Ramírez',
 				'ASAMBLEA REGIONAL',
 				'ASAMBLEA ESPECIAL'
 			];
@@ -883,7 +1055,7 @@
 			const nombresSonido = [
 				'Ángelo Maldonado D.','Benjamín López B.','Fernando Flores B.','Javier Valdés R.',
 				'José Monardes C.','Manuel Monsalve C.','Mathías López B.','Sebastian Villegas S.',
-				'Yasser Villegas De V.','Yeremie Contreras D.','ASAMBLEA REGIONAL','ASAMBLEA ESPECIAL'
+				'Yasser Villegas De V.','Yeremie Contreras D.','David Ramírez','ASAMBLEA REGIONAL','ASAMBLEA ESPECIAL'
 			];
 			const sel = document.getElementById('sonidoSelect');
 			sel.innerHTML = '';
@@ -999,9 +1171,9 @@
 		// Poblar select de Aseo - Suministra con nombres solicitados
 		function populateAseoSuministraSelect() {
 			const nombres = [
-				'Pedro Díaz Estay',
-				'Thomás Diaz F.',
-				'Francisco Arévalo Aravena'
+				'Pedro Díaz',
+				'Thomás Diaz',
+				'Francisco Arévalo'
 			];
 			const sel = document.getElementById('aseoSuministraSelect');
 			if (!sel) return;
@@ -1036,6 +1208,22 @@
 			const fecha = fechaCustom || fechaSel;
 			const enc = sanitizePeopleString(document.getElementById('abrirEncSelect').value || '');
 			if (!fecha || !enc) return;
+			const list = document.getElementById('abrirList');
+			const last = list?.lastElementChild;
+			if (last) {
+				const span = last.querySelector('.item-text');
+				const current = (last.dataset.value || span?.textContent || '').trim();
+				// Si la última línea tiene mismo encargado y una sola fecha, unir fechas con ' / '
+				const match = current.match(/^(.*?)(\s+—\s+)(.+)$/);
+				if (match && match[3] === enc && !/[;/]/.test(match[1]) && !/\s\/\s/.test(match[1])) {
+					const nuevaFecha = match[1] + ' / ' + fecha;
+					const updated = `${nuevaFecha} — ${enc}`;
+					last.dataset.value = updated;
+					if (span) span.textContent = updated;
+					document.getElementById('abrirFechaCustom').value = '';
+					return;
+				}
+			}
 			addListItem('abrirList', `${fecha} — ${enc}`);
 			document.getElementById('abrirFechaCustom').value = '';
 		});
@@ -1073,14 +1261,14 @@
 			const parejas = [
 				'Víctor Martínez - Carlos Morales',
 				'Víctor Ramirez - Richard Parra',
-				'José Contreras L. - Javier Valdés R.',
+				'José Contreras  - Javier Valdés ',
 				'Claudio Ramos S. - Matthias Lopez',
-				'José Arévalo Astudillo - Jovino Muñoz González',
-				'Cristian Salazar Correa - Miguel García Fernández',
+				'José Arévalo - Jovino Muñoz ',
+				'Cristian Salazar - Miguel García',
 				'José Quevedo - Manuel Monsalve',
 				'José Cuevas - Pedro Abarza',
-				'Juan Ibáñez Luengo - Sergio Palma Leyton',
-				'Enzo Palma Retamal -  Salvador Quiroz'
+				'Juan Ibáñez  - Sergio Palma ',
+				'Enzo Palma  -  Salvador Quiroz'
 			];
 			const sel = document.getElementById('cerrarMieSelect');
 			sel.innerHTML = '';
@@ -1099,14 +1287,14 @@
 			const parejas = [
 				'Víctor Martínez - Carlos Morales',
 				'Víctor Ramirez - Richard Parra',
-				'José Contreras L. - Javier Valdés R.',
+				'José Contreras  - Javier Valdés ',
 				'Claudio Ramos S. - Matthias Lopez',
-				'José Arévalo Astudillo - Jovino Muñoz González',
-				'Cristian Salazar Correa - Miguel García Fernández',
+				'José Arévalo - Jovino Muñoz ',
+				'Cristian Salazar  - Miguel García ',
 				'José Quevedo - Manuel Monsalve',
 				'José Cuevas - Pedro Abarza',
-				'Juan Ibáñez Luengo - Sergio Palma Leyton',
-				'Enzo Palma Retamal -  Salvador Quiroz'
+				'Juan Ibáñez  - Sergio Palma',
+				'Enzo Palma  -  Salvador Quiroz'
 			];
 			const sel = document.getElementById('cerrarSabSelect');
 			sel.innerHTML = '';
@@ -1194,11 +1382,6 @@
 			// opcional: limpiar lista ya añadida para evitar mezcla de meses
 			// document.getElementById('fechasList').innerHTML = '';
 		});
-		document.getElementById('filtroDiaFechas').addEventListener('change', () => {
-			populateFechasSelect();
-		});
-
-		// Navegación rápida de meses
 		document.getElementById('prevMes').addEventListener('click', () => {
 			const sel = document.getElementById('mesSelect');
 			if (sel.selectedIndex > 0) {
@@ -1216,7 +1399,29 @@
 		document.getElementById('addFecha').addEventListener('click', () => {
 			const sel = document.getElementById('fechasSelect');
 			const val = sel.value;
+			const custom = document.getElementById('fechasCustom').value.trim();
+			if (custom) {
+				// Si hay varias fechas separadas por ;, agrégalas como una sola línea separadas por ' / '
+				const fechasLinea = custom.split(';').map(f => f.trim()).filter(Boolean).join(' / ');
+				if (fechasLinea) addListItem('fechasList', fechasLinea);
+				document.getElementById('fechasCustom').value = '';
+				return;
+			}
 			if (!val) return;
+			// Si la última línea ya tiene una fecha y no es pareja, agregar como pareja con ;
+			const list = document.getElementById('fechasList');
+			const last = list?.lastElementChild;
+			if (last) {
+				const span = last.querySelector('.item-text');
+				const current = (last.dataset.value || span?.textContent || '').trim();
+				// Si no es pareja (no contiene ';' ni ' / '), agregar como pareja
+				if (current && !/[;/]/.test(current) && !/\s\/\s/.test(current)) {
+					const updated = current + ' / ' + val;
+					last.dataset.value = updated;
+					if (span) span.textContent = updated;
+					return;
+				}
+			}
 			addListItem('fechasList', val);
 		});
 		document.getElementById('clearFechas').addEventListener('click', () => {
@@ -1225,7 +1430,7 @@
 		// Inicial: muestra ejemplo para visualizar formato y sanitiza listas
 		ejemplo();
 		sanitizeAllLists();
-	</script>
+    </script>
 		<script>
 		// Persistencia automática del estado usando localStorage
 		(function(){
@@ -1253,7 +1458,7 @@
 				function listToText(id){
 					return Array.from(document.querySelectorAll('#'+id+' li')).map(li => li.dataset.value || li.textContent).join('\n');
 				}
-				['fechasList','acomodacionList','microfonosList','zoomVideoList','sonidoList','plataformaList','abrirList','cerrarMieList','cerrarSabList','aseoList']
+				['fechasList','hallList','acomodacionList','microfonosList','zoomVideoList','sonidoList','plataformaList','abrirList','cerrarMieList','cerrarSabList','aseoList']
 					.forEach(id => { state[id] = listToText(id); });
 				return state;
 			}
@@ -1279,7 +1484,7 @@
 					if (el && state[id] !== undefined) el.value = state[id];
 				});
 				const toggle = document.getElementById('toggle_sc');
-				if (toggle && state['toggle_sc'] !== undefined) toggle.checked = !!state['toggle_sc'];
+				if ( toggle && state['toggle_sc'] !== undefined) toggle.checked = !!state['toggle_sc'];
 
 				// Reconstruir listas
 				function setListFromText(id, text){
@@ -1304,7 +1509,7 @@
 						list.appendChild(li);
 					});
 				}
-				['fechasList','acomodacionList','microfonosList','zoomVideoList','sonidoList','plataformaList','abrirList','cerrarMieList','cerrarSabList','aseoList']
+				['fechasList','hallList','acomodacionList','microfonosList','zoomVideoList','sonidoList','plataformaList','abrirList','cerrarMieList','cerrarSabList','aseoList']
 					.forEach(id => setListFromText(id, state[id] || ''));
 
 				// Sanitizar listas restauradas para mantener "Nombre Apellido" consistente
